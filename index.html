@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villa Allende - Dashboard Operativo SIGIPSA</title>
+    <!-- Librerías de iconos y gráficos (Chart.js) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Encabezado Principal -->
+    <header class="main-header">
+        <div class="logo-container">
+            <span class="emoji-logo">🏥</span>
+            <div>
+                <h1>VILLA ALLENDE · X02780 - X20011</h1>
+                <p class="subtitle">DASHBOARD OPERATIVO DE SALUD (SIGIPSA)</p>
+            </div>
+        </div>
+        <div class="status-indicator">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <span id="connection-status">VERIFICANDO...</span>
+        </div>
+    </header>
+
+    <!-- Pantalla de Carga Inicial -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader-box">
+            <div class="spinner"></div>
+            <h3>Cargando Base de Datos de SIGIPSA</h3>
+            <p>Conectando con el servidor municipal...</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="load-progress"></div>
+            </div>
+            <p id="loading-details">Iniciando consulta segura...</p>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros Globales -->
+    <section class="filters-section">
+        <div class="filter-group">
+            <label>EFECTOR</label>
+            <select id="filter-efector"><option value="all">Todos</option></select>
+        </div>
+        <div class="filter-group">
+            <label>TIPO PRESTACIÓN</label>
+            <select id="filter-tipo"><option value="all">Todos</option></select>
+        </div>
+        <div class="filter-group">
+            <label>CATEGORIA</label>
+            <select id="filter-categoria"><option value="all">Todas</option></select>
+        </div>
+        <div class="filter-group">
+            <label>CEB</label>
+            <select id="filter-ceb"><option value="all">Todos</option></select>
+        </div>
+        <div class="filter-group">
+            <label>ESTADO</label>
+            <select id="filter-estado"><option value="all">Todos</option></select>
+        </div>
+        <div class="filter-group">
+            <label>SEXO</label>
+            <select id="filter-sexo"><option value="all">Todas</option></select>
+        </div>
+        <button id="btn-reset-filters" class="btn-reset"><i class="fas fa-undo"></i> Limpiar</button>
+    </section>
+
+    <!-- Sección Interanual -->
+    <main class="dashboard-grid">
+        <section class="card full-width">
+            <h3><i class="fas fa-chart-line"></i> Comparativa Interanual <span class="badge">CON % DIFERENCIA</span></h3>
+            <div class="chart-container-large">
+                <canvas id="chart-interanual"></canvas>
+            </div>
+        </section>
+
+        <!-- Gráfico Tipo de Prestación -->
+        <section class="card half-width">
+            <h3><i class="fas fa-chart-pie"></i> Tipo de Prestación</h3>
+            <div class="chart-container">
+                <canvas id="chart-prestacion"></canvas>
+            </div>
+        </section>
+
+        <!-- Módulo de Facturación (En Desarrollo) -->
+        <section class="card half-width billing-card">
+            <div class="development-notice">
+                <i class="fas fa-tools"></i>
+                <h2>🚧 MÓDULO EN DESARROLLO</h2>
+                <p>El módulo de facturación está siendo desarrollado con nuevas funcionalidades avanzadas.</p>
+                <p>Próximamente: análisis detallado por estado, proyecciones y exportación automatizada.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Módulo Diabetes -->
+    <section class="card section-container">
+        <div class="section-header">
+            <h3><i class="fas fa-droplet"></i> Diabetes - Cobertura Real vs Esperada</h3>
+            <span class="status-pill load-pill" id="diabetes-status">CARGANDO...</span>
+        </div>
+
+        <div class="metric-row">
+            <div class="metric-card">
+                <h4>🏘️ Población Adulta</h4>
+                <div class="metric-value">28.224</div>
+                <p class="metric-desc">Adultos ≥20 años (censo)</p>
+            </div>
+            <div class="metric-card alert">
+                <h4>🩸 Diabéticos Potenciales</h4>
+                <div class="metric-value" id="db-potenciales">0</div>
+                <p class="metric-desc">10.9% de población adulta</p>
+            </div>
+            <div class="metric-card success">
+                <h4>✅ Diabéticos Atendidos</h4>
+                <div class="metric-value" id="db-atendidos">0</div>
+                <p class="metric-desc">Pacientes únicos con Diabetes</p>
+            </div>
+            <div class="metric-card info">
+                <h4>📈 Cobertura Real</h4>
+                <div class="metric-value" id="db-cobertura">0%</div>
+                <p class="metric-desc">% Atendidos vs Potenciales</p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h4>📋 Detalle Nominal de Pacientes con Diabetes</h4>
+            <table id="table-diabetes">
+                <thead>
+                    <tr>
+                        <th>APELLIDO</th>
+                        <th>NOMBRE</th>
+                        <th>DNI</th>
+                        <th>EDAD</th>
+                        <th>DX</th>
+                        <th>ESTADO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="text-center">Cargando base de datos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Módulo Hipertensión -->
+    <section class="card section-container">
+        <div class="section-header">
+            <h3><i class="fas fa-heartbeat"></i> Hipertensión - Cobertura Real vs Esperada</h3>
+            <span class="status-pill load-pill" id="hta-status">CARGANDO...</span>
+        </div>
+
+        <div class="metric-row">
+            <div class="metric-card">
+                <h4>🏘️ Población Adulta</h4>
+                <div class="metric-value">28.224</div>
+                <p class="metric-desc">Adultos ≥20 años (censo)</p>
+            </div>
+            <div class="metric-card alert">
+                <h4>❤️ Hipertensos Potenciales</h4>
+                <div class="metric-value" id="hta-potenciales">0</div>
+                <p class="metric-desc">46.6% de población adulta</p>
+            </div>
+            <div class="metric-card success">
+                <h4>✅ Hipertensos Atendidos</h4>
+                <div class="metric-value" id="hta-atendidos">0</div>
+                <p class="metric-desc">Pacientes únicos con HTA</p>
+            </div>
+            <div class="metric-card info">
+                <h4>📈 Cobertura Real</h4>
+                <div class="metric-value" id="hta-cobertura">0%</div>
+                <p class="metric-desc">% Atendidos vs Potenciales</p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h4>📋 Detalle Nominal de Pacientes con Hipertensión</h4>
+            <table id="table-hta">
+                <thead>
+                    <tr>
+                        <th>APELLIDO</th>
+                        <th>NOMBRE</th>
+                        <th>DNI</th>
+                        <th>EDAD</th>
+                        <th>DX</th>
+                        <th>ESTADO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="text-center">Cargando base de datos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        VILLA ALLENDE X02780 - X20011 · Dashboard Operativo · Datos oficiales (SIGIPSA)
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 // URL de la caja negra (Web App de SIGIPSA)
-const API_URL = "https://script.google.com/macros/s/AKfycbzjpHvMWbNC78brjExGx-f82497hUwNvHwUyHhp1HMCbo-Gc8T_ALDoIP3kZMNMSGKP2w/exec";
+const ORIGINAL_URL = "https://script.google.com/macros/s/AKfycbzjpHvMWbNC78brjExGx-f82497hUwNvHwUyHhp1HMCbo-Gc8T_ALDoIP3kZMNMSGKP2w/exec";
+const API_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(ORIGINAL_URL)}`;
 
 // Estado global de los datos
 let baseDeDatos = [];

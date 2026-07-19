@@ -2,204 +2,1230 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Villa Allende - Dashboard Operativo SIGIPSA</title>
-    <!-- Librerías de iconos y gráficos (Chart.js) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>VILLA ALLENDE · DASHBOARD OPERATIVO</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg-primary:#0a0c12;--bg-secondary:#12141c;--bg-tertiary:#1a1d2a;--bg-card:#14161f;--bg-elevated:#1c1f2d;--censo-purple:#6A1B9A;--censo-purple-light:#8e44ad;--censo-purple-dark:#4a0072;--censo-turquoise:#00AFAF;--censo-turquoise-light:#00dddd;--text-primary:#f0f0f0;--text-secondary:#b0b0c0;--text-muted:#707080;--border-subtle:rgba(106,27,154,0.3);--green-success:#00c853;--orange:#ff6b35;--blue-ocean:#1e90ff;--danger:#ff4444;--warning:#ffc107;--brutal-border:3px solid var(--censo-turquoise-light);--brutal-shadow:8px 8px 0 rgba(0,175,175,0.4);--brutal-transition:all 0.2s cubic-bezier(0.2,0.9,0.4,1.1)}
+        body{background:var(--bg-primary);font-family:'Inter',sans-serif;color:var(--text-primary);overflow-x:hidden;background-image:radial-gradient(circle at 10% 20%,rgba(106,27,154,0.08)0%,transparent 50%)}
+        .container{max-width:1800px;margin:0 auto;padding:20px}
+        .header-censo{background:linear-gradient(135deg,var(--bg-secondary),var(--bg-tertiary));padding:20px 28px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;border:var(--brutal-border);border-radius:0;box-shadow:var(--brutal-shadow)}
+        .brand-censo{display:flex;align-items:center;gap:16px}
+        .brand-marker{background:linear-gradient(135deg,var(--censo-purple),var(--censo-turquoise));width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px;border-radius:0;border:2px solid var(--censo-turquoise-light)}
+        .brand-name{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--censo-purple-light),var(--censo-turquoise));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.5px}
+        .sync-status{background:rgba(255,255,255,0.05);padding:8px 18px;border-radius:0;border:2px solid var(--censo-turquoise);display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600}
+        .reset-btn{background:rgba(0,175,175,0.15);border:2px solid var(--censo-turquoise);padding:10px 24px;font-weight:700;cursor:pointer;color:var(--censo-turquoise-light);border-radius:0;transition:var(--brutal-transition)}
+        .reset-btn:hover{background:var(--censo-turquoise);color:var(--bg-primary);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--censo-purple-dark)}
+        .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;margin-bottom:32px}
+        .kpi-card{background:var(--bg-card);border:2px solid var(--censo-turquoise);border-radius:0;padding:20px;text-align:center;position:relative;overflow:hidden;transition:var(--brutal-transition)}
+        .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,var(--censo-purple),var(--censo-turquoise));transform:scaleX(1)}
+        .kpi-card:hover{transform:translate(-4px,-4px);box-shadow:8px 8px 0 var(--censo-turquoise);border-color:var(--censo-turquoise-light)}
+        .kpi-title{font-size:.7rem;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;letter-spacing:1px;font-weight:800}
+        .kpi-value{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--censo-turquoise-light));-webkit-background-clip:text;background-clip:text;color:transparent}
+        .kpi-detail{font-size:.65rem;color:var(--text-muted);margin-top:5px;font-weight:500}
+        .filter-bar{background:var(--bg-card);border:2px solid var(--censo-turquoise);border-radius:0;padding:20px 24px;margin-bottom:28px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;box-shadow:6px 6px 0 rgba(0,175,175,0.3)}
+        .filter-group{display:flex;flex-direction:column;gap:8px;min-width:150px;flex:1}
+        .filter-group label{font-size:.7rem;font-weight:800;color:var(--censo-turquoise-light);text-transform:uppercase;letter-spacing:1px}
+        select,input{background:var(--bg-tertiary);border:2px solid var(--border-subtle);padding:12px 16px;font-size:.85rem;border-radius:0;color:var(--text-primary);cursor:pointer;font-weight:500;transition:var(--brutal-transition)}
+        select:focus,input:focus{outline:none;border-color:var(--censo-turquoise);box-shadow:2px 2px 0 var(--censo-turquoise)}
+        .comparativa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:32px}
+        .year-card{background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-card));border-radius:0;padding:20px;text-align:center;border:2px solid var(--censo-turquoise);transition:var(--brutal-transition)}
+        .year-card:hover{transform:translate(-6px,-6px);border-color:var(--censo-turquoise-light);box-shadow:10px 10px 0 var(--censo-turquoise)}
+        .year-title{font-size:1.5rem;font-weight:800;color:var(--censo-turquoise-light);margin-bottom:15px;letter-spacing:-1px}
+        .year-stats{display:flex;flex-direction:column;gap:10px}
+        .year-stat{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:0;border-left:4px solid var(--censo-turquoise)}
+        .year-stat-label{font-size:.75rem;color:var(--text-secondary);font-weight:600}
+        .year-stat-value{font-weight:800;color:var(--censo-turquoise-light)}
+        .trend-up{color:var(--green-success);margin-left:5px;font-size:.7rem}
+        .trend-down{color:var(--danger);margin-left:5px;font-size:.7rem}
+        .card{background:var(--bg-card);border:2px solid var(--censo-turquoise);border-radius:0;padding:24px;transition:var(--brutal-transition)}
+        .card:hover{transform:translate(-4px,-4px);border-color:var(--censo-turquoise-light);box-shadow:8px 8px 0 var(--censo-turquoise)}
+        .card h3{font-size:1.1rem;font-weight:800;color:var(--censo-turquoise-light);margin-bottom:20px;border-left:6px solid var(--censo-turquoise);padding-left:14px;letter-spacing:-0.3px}
+        .insight-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:28px;margin-bottom:32px}
+        .full-width-card{grid-column:1/-1}
+        .stats-box{margin-top:20px;padding:16px;background:var(--bg-tertiary);border-radius:0;border-left:6px solid var(--censo-turquoise)}
+        .stats-title{font-size:.7rem;font-weight:800;color:var(--censo-turquoise-light);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+        .seguimiento-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+        .seguimiento-item{background:var(--bg-elevated);padding:12px;text-align:center;border:1px solid var(--censo-turquoise)}
+        .seguimiento-label{font-size:.7rem;color:var(--text-muted)}
+        .seguimiento-value{font-size:1.3rem;font-weight:800;color:var(--censo-turquoise-light)}
+        .comparacion-barra{margin-top:20px;padding:16px;background:var(--bg-elevated);border-radius:0}
+        .barra-progreso-container{margin:15px 0}
+        .barra-label{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.8rem}
+        .barra-fondo{background:var(--bg-tertiary);border-radius:0;height:30px;overflow:hidden;border:1px solid var(--censo-turquoise)}
+        .barra-lleno{background:linear-gradient(90deg,var(--censo-purple),var(--censo-turquoise));height:100%;width:0%;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:white;font-weight:bold;font-size:.8rem;transition:width .5s ease}
+        .insight-highlight{margin-top:12px;padding:10px 15px;background:linear-gradient(135deg,rgba(106,27,154,0.2),rgba(0,175,175,0.1));border-left:6px solid var(--censo-turquoise);border-radius:0;font-size:.75rem;color:var(--text-secondary);font-weight:500}
+        .insight-highlight strong{color:var(--censo-turquoise-light);font-weight:800}
+        .insight-categoria{display:block;padding:3px 0;margin:1px 0}
+        .color-dot{display:inline-block;width:12px;height:12px;border-radius:0;margin-right:6px;border:1px solid rgba(255,255,255,0.2)}
+        canvas{max-height:350px;width:100%;margin-top:8px}
+        .table-container{max-height:450px;overflow-y:auto;margin-top:16px;border:1px solid var(--censo-turquoise)}
+        .data-table{width:100%;border-collapse:collapse;font-size:.75rem}
+        .data-table th{background:var(--bg-elevated);padding:12px;text-align:left;color:var(--censo-turquoise-light);position:sticky;top:0;border-bottom:3px solid var(--censo-turquoise);font-weight:800}
+        .data-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);vertical-align:top}
+        .data-table tr:hover{background:var(--bg-tertiary)}
+        .btn-group{display:flex;gap:12px;margin:10px 0 15px 0;flex-wrap:wrap}
+        .btn-export{background:linear-gradient(135deg,var(--censo-purple),var(--censo-purple-dark));border:2px solid var(--censo-turquoise);padding:6px 16px;border-radius:0;color:white;cursor:pointer;font-size:.7rem;transition:var(--brutal-transition);display:inline-block;font-weight:700}
+        .btn-export:hover{transform:translate(-2px,-2px);background:var(--censo-turquoise);border-color:var(--censo-purple-light);box-shadow:4px 4px 0 var(--censo-purple-dark)}
+        .btn-danger{background:linear-gradient(135deg,var(--danger),#cc0000)}
+        .btn-danger:hover{background:var(--danger)}
+        .btn-success{background:linear-gradient(135deg,var(--green-success),#009944)}
+        .btn-success:hover{background:var(--green-success)}
+        .btn-view{background:linear-gradient(135deg,var(--blue-ocean),#0c5f9e);border:2px solid var(--censo-turquoise);padding:6px 16px;border-radius:0;color:white;cursor:pointer;font-size:.7rem;transition:var(--brutal-transition);font-weight:700}
+        .btn-view:hover{transform:translate(-2px,-2px);background:var(--censo-turquoise);border-color:var(--blue-ocean);box-shadow:4px 4px 0 var(--censo-purple-dark)}
+        .btn-chart-mode{background:rgba(0,175,175,0.1);border:2px solid var(--censo-turquoise);padding:6px 16px;border-radius:0;color:var(--censo-turquoise-light);cursor:pointer;font-size:.7rem;transition:var(--brutal-transition);font-weight:700}
+        .btn-chart-mode.active{background:var(--censo-turquoise);color:var(--bg-primary)}
+        .btn-chart-mode:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--censo-purple-dark)}
+        .btn-small{font-size:.6rem;padding:4px 10px}
+        .nav-lateral{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;background:var(--bg-card);padding:12px 20px;border-radius:0;border:2px solid var(--censo-turquoise);justify-content:center}
+        .nav-item{background:var(--bg-tertiary);border:2px solid var(--censo-turquoise);padding:12px 28px;font-weight:800;cursor:pointer;color:var(--text-secondary);border-radius:0;transition:var(--brutal-transition);font-size:.9rem}
+        .nav-item i{margin-right:8px}
+        .nav-item.active{background:linear-gradient(135deg,var(--censo-purple),var(--censo-purple-dark));color:white;border-color:var(--censo-turquoise-light);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--censo-turquoise)}
+        .nav-item:hover:not(.active){background:var(--bg-elevated);color:var(--censo-turquoise-light);transform:translate(-2px,-2px);box-shadow:4px 4px 0 rgba(0,175,175,0.5)}
+        .seccion{display:none;animation:brutalFade .25s cubic-bezier(0.2,0.9,0.4,1.1)}
+        .seccion.active{display:block}
+        .chart-navigation{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;background:var(--bg-tertiary);padding:15px;border:2px solid var(--censo-turquoise);align-items:center}
+        .chart-btn{background:var(--bg-card);border:2px solid var(--censo-turquoise);padding:8px 16px;cursor:pointer;color:var(--text-secondary);font-weight:700;font-size:.75rem;transition:var(--brutal-transition);border-radius:0}
+        .chart-btn.active{background:linear-gradient(135deg,var(--censo-purple),var(--censo-purple-dark));color:white;border-color:var(--censo-turquoise-light);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--censo-turquoise)}
+        .chart-btn:hover:not(.active){background:var(--bg-elevated);color:var(--censo-turquoise-light);transform:translate(-2px,-2px)}
+        .chart-container{min-height:400px;transition:all 0.3s ease}
+        .badge-correction{background:var(--green-success);color:white;padding:2px 8px;border-radius:0;font-size:.65rem;margin-left:8px;font-weight:800}
+        .cobertura-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:15px 0}
+        .cobertura-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:15px 0}
+        .cobertura-card{background:var(--bg-elevated);padding:15px;text-align:center;border:2px solid var(--censo-turquoise)}
+        .cobertura-card h4{font-size:.8rem;color:var(--censo-turquoise-light);margin-bottom:10px}
+        .cobertura-number{font-size:1.8rem;font-weight:800;color:white}
+        .cobertura-label{font-size:.7rem;color:var(--text-muted);margin-top:5px}
+        
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;z-index:3000;backdrop-filter:blur(4px)}
+        .modal-container{background:var(--bg-card);border:3px solid var(--censo-turquoise);border-radius:0;width:90%;max-width:1200px;max-height:85vh;display:flex;flex-direction:column;box-shadow:16px 16px 0 rgba(0,175,175,0.5)}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:2px solid var(--censo-turquoise);background:var(--bg-tertiary)}
+        .modal-header h2{color:var(--censo-turquoise-light);font-size:1.3rem}
+        .modal-close{background:var(--danger);border:none;color:white;font-size:1.5rem;cursor:pointer;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:0;transition:var(--brutal-transition)}
+        .modal-close:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--censo-purple-dark)}
+        .modal-search{padding:15px 24px;background:var(--bg-elevated);border-bottom:1px solid var(--border-subtle)}
+        .modal-search input{width:100%;padding:12px;background:var(--bg-tertiary);border:2px solid var(--censo-turquoise);color:white}
+        .modal-table-container{flex:1;overflow-y:auto;padding:20px}
+        .modal-footer{padding:15px 24px;border-top:2px solid var(--censo-turquoise);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-tertiary)}
+        .modal-table{width:100%;border-collapse:collapse;font-size:.8rem}
+        .modal-table th{background:var(--bg-elevated);padding:12px;text-align:left;color:var(--censo-turquoise-light);position:sticky;top:0;border-bottom:2px solid var(--censo-turquoise)}
+        .modal-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle)}
+        
+        .porcentaje-input{background:var(--bg-tertiary);border:2px solid var(--censo-turquoise);padding:8px 12px;color:var(--text-primary);width:70px;font-weight:700;text-align:center;border-radius:0}
+        .porcentaje-input:focus{outline:none;border-color:var(--censo-turquoise-light);box-shadow:2px 2px 0 var(--censo-turquoise)}
+        .porcentaje-label{color:var(--censo-turquoise-light);font-weight:700;font-size:.85rem}
+        
+        .ceb-categoria-card{background:var(--bg-elevated);padding:16px;border:2px solid var(--censo-turquoise);margin-bottom:12px}
+        .ceb-categoria-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+        .ceb-categoria-nombre{font-weight:800;color:var(--censo-turquoise-light);font-size:.95rem}
+        .ceb-categoria-stats{display:flex;gap:20px;flex-wrap:wrap;font-size:.8rem}
+        .ceb-categoria-stats span{color:var(--text-secondary)}
+        .ceb-categoria-stats strong{color:white}
+        .barra-ceb{background:var(--bg-tertiary);border-radius:0;height:24px;overflow:hidden;margin-top:8px;border:1px solid var(--censo-turquoise);position:relative}
+        .barra-ceb-fill{height:100%;transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:.65rem;font-weight:700;color:white}
+        .barra-ceb-objetivo{position:absolute;height:100%;width:2px;background:var(--orange);top:0;z-index:2}
+        .barra-ceb-objetivo::after{content:'🎯';position:absolute;top:-18px;right:-8px;font-size:.7rem}
+        
+        .input-editable{background:var(--bg-tertiary);border:2px solid var(--censo-turquoise);padding:8px 12px;color:var(--text-primary);width:100px;font-weight:700;text-align:center;border-radius:0}
+        .input-editable:focus{outline:none;border-color:var(--censo-turquoise-light);box-shadow:2px 2px 0 var(--censo-turquoise)}
+        
+        .mensaje-sin-datos{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:1.1rem}
+        .mensaje-sin-datos i{font-size:2.5rem;display:block;margin-bottom:15px;color:var(--censo-turquoise)}
+        
+        .cumplimiento-verde{color:var(--green-success)}
+        .cumplimiento-rojo{color:var(--danger)}
+        
+        @media(max-width:1024px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.comparativa-grid{grid-template-columns:1fr}.nav-item{padding:8px 16px;font-size:.8rem}.cobertura-grid{grid-template-columns:1fr}.cobertura-grid-4{grid-template-columns:1fr 1fr}}
+        @media(max-width:768px){.insight-row{grid-template-columns:1fr}.filter-bar{flex-direction:column}.nav-lateral{flex-direction:column;align-items:stretch}.nav-item{text-align:center}.seguimiento-grid{grid-template-columns:1fr}.btn-group{flex-direction:column}.kpi-grid{grid-template-columns:1fr 1fr}.cobertura-grid-4{grid-template-columns:1fr}}
+        
+        .spinner{width:50px;height:50px;border:5px solid var(--border-subtle);border-top-color:var(--censo-turquoise);border-radius:0;animation:spin .6s linear infinite;margin:0 auto 20px;transform:rotate(45deg)}
+        .progress-bar{width:100%;height:8px;background:var(--bg-tertiary);border-radius:0;overflow:hidden;margin:20px 0;border:1px solid var(--censo-turquoise)}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--censo-purple),var(--censo-turquoise));width:0%;transition:width .2s cubic-bezier(0.2,0.9,0.4,1.1)}
+        .modal-loading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;z-index:2000;backdrop-filter:blur(4px)}
+        .modal-content{background:var(--bg-card);border-radius:0;padding:40px;text-align:center;min-width:350px;border:3px solid var(--censo-turquoise);box-shadow:16px 16px 0 rgba(0,175,175,0.5)}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes brutalFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    </style>
 </head>
 <body>
-
-    <!-- Encabezado Principal -->
-    <header class="main-header">
-        <div class="logo-container">
-            <span class="emoji-logo">🏥</span>
-            <div>
-                <h1>VILLA ALLENDE · X02780 - X20011</h1>
-                <p class="subtitle">DASHBOARD OPERATIVO DE SALUD (SIGIPSA)</p>
+<div class="container">
+    <div class="header-censo">
+        <div class="brand-censo"><div class="brand-marker">🏥</div><div class="brand-name">VILLA ALLENDE · X02780 - X20011</div></div>
+        <div class="sync-status"><i class="fas fa-cloud-upload-alt"></i><span id="syncStatus">VERIFICANDO...</span><button class="reset-btn" id="refreshDataBtn"><i class="fas fa-sync-alt"></i> SINCRONIZAR</button></div>
+    </div>
+    <div id="loadingModal" class="modal-loading"><div class="modal-content"><div class="spinner"></div><h3>Cargando Base de Datos de SIGIPSA</h3><p id="modalStatusText">Conectando...</p><div class="progress-bar"><div class="progress-fill" id="modalProgressFill"></div></div><p id="modalCountText"></p></div></div>
+    <div class="kpi-grid" id="kpiGenerales"></div>
+    <div class="filter-bar">
+        <div class="filter-group"><label><i class="fas fa-building"></i> EFECTOR</label><select id="efectorFilter"><option value="all">Todos</option></select></div>
+        <div class="filter-group"><label><i class="fas fa-calendar"></i> AÑO</label><select id="anioFilter"><option value="all">Todos</option></select></div>
+        <div class="filter-group"><label><i class="fas fa-stethoscope"></i> TIPO PRESTACIÓN</label><select id="tipoPrestacionFilter"><option value="all">Todas</option></select></div>
+        <div class="filter-group"><label><i class="fas fa-syringe"></i> PROCEDIMIENTO</label><select id="procedimientoFilter"><option value="all">Todos</option></select></div>
+        <div class="filter-group"><label><i class="fas fa-diagnoses"></i> DIAGNÓSTICO</label><select id="dxFilter"><option value="all">Todos</option></select></div>
+        <div class="filter-group"><label><i class="fas fa-ambulance"></i> O.S</label><select id="osFilter"><option value="all">Todas</option></select></div>
+        <div><button class="reset-btn" id="resetFilters"><i class="fas fa-undo-alt"></i> RESET</button></div>
+    </div>
+    <div class="card full-width-card" style="margin-bottom:28px"><h3><i class="fas fa-chart-line"></i> 📊 Comparativa Interanual <span class="badge-correction">CON % DIFERENCIA</span></h3><div class="comparativa-grid" id="comparativaAnual"></div></div>
+    <div class="nav-lateral">
+        <button class="nav-item active" data-seccion="general">📊 GENERAL</button>
+        <button class="nav-item" data-seccion="diabetes">🩸 DIABETES</button>
+        <button class="nav-item" data-seccion="hipertension">❤️ HIPERTENSIÓN</button>
+        <button class="nav-item" data-seccion="ceb">⚠️ CEB PENDIENTES</button>
+    </div>
+    
+    <div id="seccion-general" class="seccion active">
+        <div class="chart-navigation" id="chartNavGeneral">
+            <button class="chart-btn active" data-chart="tipoPrestacion">📊 Tipo Prestación</button>
+            <button class="chart-btn" data-chart="procedimientos">🔬 Top Procedimientos</button>
+            <button class="chart-btn" data-chart="dx">📋 Top Diagnósticos</button>
+            <button class="chart-btn" data-chart="lc">📌 Línea de Cuidado</button>
+            <button class="chart-btn" data-chart="categoriaEdad">👥 Categoría Edad</button>
+            <button class="chart-btn" data-chart="sexo">⚥ Distribución Sexo</button>
+            <button class="chart-btn" data-chart="os">🏥 Obras Sociales</button>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                <span style="color:var(--text-muted);font-size:.7rem;font-weight:600">MODO:</span>
+                <button class="btn-chart-mode active" data-mode="prestaciones" id="chartModePrestaciones">📋 Prestaciones</button>
+                <button class="btn-chart-mode" data-mode="pacientes" id="chartModePacientes">👤 Pacientes Únicos</button>
             </div>
         </div>
-        <div class="status-indicator">
-            <i class="fas fa-circle-notch fa-spin"></i>
-            <span id="connection-status">VERIFICANDO...</span>
-        </div>
-    </header>
-
-    <!-- Pantalla de Carga Inicial -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loader-box">
-            <div class="spinner"></div>
-            <h3>Cargando Base de Datos de SIGIPSA</h3>
-            <p>Conectando con el servidor municipal...</p>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="load-progress"></div>
+        <div class="card full-width-card">
+            <div id="chartTitle" class="stats-title" style="font-size:1rem; margin-bottom:15px">📊 Tipo de Prestación</div>
+            <div id="chartContainer" class="chart-container">
+                <canvas id="activeChart"></canvas>
             </div>
-            <p id="loading-details">Iniciando consulta segura...</p>
+            <div id="chartInsight" class="insight-highlight"></div>
+            <div style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn-export btn-success" onclick="exportarGraficoActual()"><i class="fas fa-file-excel"></i> EXPORTAR DATOS DEL GRÁFICO</button>
+                <button class="btn-export" id="exportOSConCoberturaBtn" style="display:none"><i class="fas fa-check-circle"></i> EXPORTAR CON COBERTURA</button>
+                <button class="btn-export btn-danger" id="exportOSSinDatosBtn" style="display:none"><i class="fas fa-exclamation-circle"></i> EXPORTAR SIN DATOS</button>
+            </div>
         </div>
     </div>
 
-    <!-- Barra de Filtros Globales -->
-    <section class="filters-section">
-        <div class="filter-group">
-            <label>EFECTOR</label>
-            <select id="filter-efector"><option value="all">Todos</option></select>
-        </div>
-        <div class="filter-group">
-            <label>TIPO PRESTACIÓN</label>
-            <select id="filter-tipo"><option value="all">Todos</option></select>
-        </div>
-        <div class="filter-group">
-            <label>CATEGORIA</label>
-            <select id="filter-categoria"><option value="all">Todas</option></select>
-        </div>
-        <div class="filter-group">
-            <label>CEB</label>
-            <select id="filter-ceb"><option value="all">Todos</option></select>
-        </div>
-        <div class="filter-group">
-            <label>ESTADO</label>
-            <select id="filter-estado"><option value="all">Todos</option></select>
-        </div>
-        <div class="filter-group">
-            <label>SEXO</label>
-            <select id="filter-sexo"><option value="all">Todas</option></select>
-        </div>
-        <button id="btn-reset-filters" class="btn-reset"><i class="fas fa-undo"></i> Limpiar</button>
-    </section>
-
-    <!-- Sección Interanual -->
-    <main class="dashboard-grid">
-        <section class="card full-width">
-            <h3><i class="fas fa-chart-line"></i> Comparativa Interanual <span class="badge">CON % DIFERENCIA</span></h3>
-            <div class="chart-container-large">
-                <canvas id="chart-interanual"></canvas>
+    <div id="seccion-diabetes" class="seccion">
+        <div class="card full-width-card">
+            <h3><i class="fas fa-tint"></i> Diabetes - Cobertura Real vs Esperada <span class="badge-correction" id="diabetesBadge">CARGANDO...</span></h3>
+            <div class="filter-bar" style="margin-bottom:16px;padding:16px;align-items:center">
+                <div class="filter-group"><label><i class="fas fa-calendar"></i> FILTRAR POR AÑO</label><select id="diabetesAnioFilter"><option value="all">Todos</option></select></div>
+                <div class="filter-group"><label><i class="fas fa-filter"></i> ESTADO SEGUIMIENTO</label><select id="diabetesEstadoFilter"><option value="all">Todos</option><option value="Ct. Única">📍 Ct. Única</option><option value="Con 1 Control">📌 Con 1 Control</option><option value="En Seguimiento">✅ En Seguimiento</option></select></div>
+                <div class="filter-group" style="flex-direction:row;align-items:center;gap:8px;min-width:auto">
+                    <label style="margin-bottom:0">% CON COBERTURA</label>
+                    <input type="number" class="porcentaje-input" id="diabetesPorcentajeCobertura" value="50" min="0" max="100" step="1">
+                    <span class="porcentaje-label">%</span>
+                </div>
+                <button class="reset-btn" id="resetDiabetesFilter"><i class="fas fa-undo-alt"></i> LIMPIAR</button>
+                <button class="btn-export btn-success" id="exportDiabetesFilterBtn" style="margin-left:auto"><i class="fas fa-file-excel"></i> EXPORTAR FILTRO</button>
             </div>
-        </section>
-
-        <!-- Gráfico Tipo de Prestación -->
-        <section class="card half-width">
-            <h3><i class="fas fa-chart-pie"></i> Tipo de Prestación</h3>
-            <div class="chart-container">
-                <canvas id="chart-prestacion"></canvas>
+            
+            <div class="stats-box">
+                <div class="stats-title">📊 COBERTURA POBLACIONAL (CENSO OFICIAL)</div>
+                <div class="cobertura-grid-4">
+                    <div class="cobertura-card"><h4>🏘️ Población Adulta</h4><div class="cobertura-number">28.224</div><div class="cobertura-label">Adultos ≥20 años (censo)</div></div>
+                    <div class="cobertura-card"><h4>🩸 Diabéticos Potenciales</h4><div class="cobertura-number" id="diabeticosPotencialesLocalidad">0</div><div class="cobertura-label">10.9% de población adulta</div></div>
+                    <div class="cobertura-card"><h4>📊 Con Cobertura</h4><div class="cobertura-number" id="diabeticosConCobertura">0</div><div class="cobertura-label">% configurable</div></div>
+                    <div class="cobertura-card"><h4>✅ Diabéticos Atendidos</h4><div class="cobertura-number" id="diabeticosAtendidosLocalidad">0</div><div class="cobertura-label">Pacientes únicos con Diabetes</div></div>
+                    <div class="cobertura-card"><h4>📈 Cobertura Poblacional</h4><div class="cobertura-number" id="coberturaPoblacionalDiabetes">0%</div><div class="cobertura-label">% sobre con cobertura</div></div>
+                </div>
             </div>
-        </section>
-
-        <!-- Módulo de Facturación (En Desarrollo) -->
-        <section class="card half-width billing-card">
-            <div class="development-notice">
-                <i class="fas fa-tools"></i>
-                <h2>🚧 MÓDULO EN DESARROLLO</h2>
-                <p>El módulo de facturación está siendo desarrollado con nuevas funcionalidades avanzadas.</p>
-                <p>Próximamente: análisis detallado por estado, proyecciones y exportación automatizada.</p>
+            
+            <div class="stats-box">
+                <div class="stats-title">📊 COBERTURA SOBRE PADRÓN SIGIPSA</div>
+                <div class="cobertura-grid-4">
+                    <div class="cobertura-card"><h4>📋 Padrón SIGIPSA</h4>
+                        <input type="number" class="input-editable" id="diabetesPadronInput" value="5611" style="width:120px;font-size:1.5rem;text-align:center">
+                        <div class="cobertura-label">Adultos ≥20 años en padrón</div>
+                    </div>
+                    <div class="cobertura-card"><h4>🩸 Diabéticos Potenciales</h4><div class="cobertura-number" id="diabeticosPotencialesPadron">0</div><div class="cobertura-label">10.9% del padrón</div></div>
+                    <div class="cobertura-card"><h4>📊 Con Cobertura</h4><div class="cobertura-number" id="diabeticosConCoberturaPadron">0</div><div class="cobertura-label">% configurable</div></div>
+                    <div class="cobertura-card"><h4>✅ Diabéticos Atendidos</h4><div class="cobertura-number" id="diabeticosAtendidosPadron">0</div><div class="cobertura-label">Pacientes únicos con Diabetes</div></div>
+                    <div class="cobertura-card"><h4>📈 Cobertura Padrón</h4><div class="cobertura-number" id="coberturaPadronDiabetes">0%</div><div class="cobertura-label">% sobre con cobertura</div></div>
+                </div>
             </div>
-        </section>
-    </main>
-
-    <!-- Módulo Diabetes -->
-    <section class="card section-container">
-        <div class="section-header">
-            <h3><i class="fas fa-droplet"></i> Diabetes - Cobertura Real vs Esperada</h3>
-            <span class="status-pill load-pill" id="diabetes-status">CARGANDO...</span>
+            
+            <div class="stats-box">
+                <div class="stats-title">📈 COBERTURA SOBRE ATENDIDOS EN SALUD</div>
+                <div class="cobertura-grid">
+                    <div class="cobertura-card"><h4>👥 Total Pacientes</h4><div class="cobertura-number" id="totalAtencionesDBT">0</div><div class="cobertura-label">pacientes en período</div></div>
+                    <div class="cobertura-card"><h4>👤 Adultos Atendidos</h4><div class="cobertura-number" id="adultosAtendidosDBT">0</div><div class="cobertura-label">Pacientes ≥20 años</div></div>
+                    <div class="cobertura-card"><h4>🎯 Diabéticos Potenciales</h4><div class="cobertura-number" id="diabeticosPotencialesAtendidos">0</div><div class="cobertura-label">10.9% de adultos atendidos</div></div>
+                    <div class="cobertura-card"><h4>✅ Diabéticos Detectados</h4><div class="cobertura-number" id="diabeticosDetectadosAtendidos">0</div><div class="cobertura-label">Pacientes con Diabetes</div></div>
+                    <div class="cobertura-card"><h4>🎯 Cobertura sobre Potenciales</h4><div class="cobertura-number" id="coberturaPotencialesDiabetes">0%</div><div class="cobertura-label">% detectados vs esperados</div></div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-view" onclick="verPacientes('diabetes')"><i class="fas fa-eye"></i> VER PACIENTES</button>
+                <button class="btn-export btn-success" onclick="exportarPacientesUnicos('diabetes')"><i class="fas fa-users"></i> EXPORTAR PACIENTES ÚNICOS</button>
+                <button class="btn-export" onclick="exportarTodasPrestaciones('diabetes')"><i class="fas fa-list"></i> EXPORTAR PRESTACIONES</button>
+            </div>
+            
+            <div class="stats-box">
+                <div class="stats-title">📋 Estado de Seguimiento</div>
+                <div class="seguimiento-grid">
+                    <div class="seguimiento-item"><div class="seguimiento-label">📍 Ct. Única (1 consulta en 2 años)</div><div class="seguimiento-value" id="diabetesCtUnica">0</div></div>
+                    <div class="seguimiento-item"><div class="seguimiento-label">📌 Con 1 Control (≥2 consultas en 2 años)</div><div class="seguimiento-value" id="diabetesUnControl">0</div></div>
+                    <div class="seguimiento-item"><div class="seguimiento-label">✅ En Seguimiento (1 consulta/año ×2 años)</div><div class="seguimiento-value" id="diabetesSeguimiento">0</div></div>
+                </div>
+            </div>
+            
+            <div class="table-container"><table class="data-table"><thead><tr><th>APELLIDO</th><th>NOMBRE</th><th>DNI</th><th>EDAD</th><th>LC</th><th>DX</th><th>CONSULTAS</th><th>ESTADO SEGUIMIENTO</th><th>ÚLTIMA PRESTACIÓN</th></tr></thead><tbody id="diabetesTableBody"></tbody></table></div>
         </div>
+    </div>
 
-        <div class="metric-row">
-            <div class="metric-card">
-                <h4>🏘️ Población Adulta</h4>
-                <div class="metric-value">28.224</div>
-                <p class="metric-desc">Adultos ≥20 años (censo)</p>
+    <div id="seccion-hipertension" class="seccion">
+        <div class="card full-width-card">
+            <h3><i class="fas fa-heartbeat"></i> Hipertensión - Cobertura Real vs Esperada <span class="badge-correction" id="hipertensionBadge">CARGANDO...</span></h3>
+            <div class="filter-bar" style="margin-bottom:16px;padding:16px;align-items:center">
+                <div class="filter-group"><label><i class="fas fa-calendar"></i> FILTRAR POR AÑO</label><select id="hipertensionAnioFilter"><option value="all">Todos</option></select></div>
+                <div class="filter-group"><label><i class="fas fa-filter"></i> ESTADO SEGUIMIENTO</label><select id="hipertensionEstadoFilter"><option value="all">Todos</option><option value="Ct. Única">📍 Ct. Única</option><option value="Con 1 Control">📌 Con 1 Control</option><option value="En Seguimiento">✅ En Seguimiento</option></select></div>
+                <div class="filter-group" style="flex-direction:row;align-items:center;gap:8px;min-width:auto">
+                    <label style="margin-bottom:0">% CON COBERTURA</label>
+                    <input type="number" class="porcentaje-input" id="hipertensionPorcentajeCobertura" value="50" min="0" max="100" step="1">
+                    <span class="porcentaje-label">%</span>
+                </div>
+                <button class="reset-btn" id="resetHipertensionFilter"><i class="fas fa-undo-alt"></i> LIMPIAR</button>
+                <button class="btn-export btn-success" id="exportHipertensionFilterBtn" style="margin-left:auto"><i class="fas fa-file-excel"></i> EXPORTAR FILTRO</button>
             </div>
-            <div class="metric-card alert">
-                <h4>🩸 Diabéticos Potenciales</h4>
-                <div class="metric-value" id="db-potenciales">0</div>
-                <p class="metric-desc">10.9% de población adulta</p>
+            
+            <div class="stats-box">
+                <div class="stats-title">📊 COBERTURA POBLACIONAL (CENSO OFICIAL)</div>
+                <div class="cobertura-grid-4">
+                    <div class="cobertura-card"><h4>🏘️ Población Adulta</h4><div class="cobertura-number">28.224</div><div class="cobertura-label">Adultos ≥20 años (censo)</div></div>
+                    <div class="cobertura-card"><h4>❤️ Hipertensos Potenciales</h4><div class="cobertura-number" id="hipertensosPotencialesLocalidad">0</div><div class="cobertura-label">46.6% de población adulta</div></div>
+                    <div class="cobertura-card"><h4>📊 Con Cobertura</h4><div class="cobertura-number" id="hipertensosConCobertura">0</div><div class="cobertura-label">% configurable</div></div>
+                    <div class="cobertura-card"><h4>✅ Hipertensos Atendidos</h4><div class="cobertura-number" id="hipertensosAtendidosLocalidad">0</div><div class="cobertura-label">Pacientes únicos con HTA</div></div>
+                    <div class="cobertura-card"><h4>📈 Cobertura Poblacional</h4><div class="cobertura-number" id="coberturaPoblacionalHipertension">0%</div><div class="cobertura-label">% sobre con cobertura</div></div>
+                </div>
             </div>
-            <div class="metric-card success">
-                <h4>✅ Diabéticos Atendidos</h4>
-                <div class="metric-value" id="db-atendidos">0</div>
-                <p class="metric-desc">Pacientes únicos con Diabetes</p>
+            
+            <div class="stats-box">
+                <div class="stats-title">📊 COBERTURA SOBRE PADRÓN SIGIPSA</div>
+                <div class="cobertura-grid-4">
+                    <div class="cobertura-card"><h4>📋 Padrón SIGIPSA</h4>
+                        <input type="number" class="input-editable" id="hipertensionPadronInput" value="5611" style="width:120px;font-size:1.5rem;text-align:center">
+                        <div class="cobertura-label">Adultos ≥20 años en padrón</div>
+                    </div>
+                    <div class="cobertura-card"><h4>❤️ Hipertensos Potenciales</h4><div class="cobertura-number" id="hipertensosPotencialesPadron">0</div><div class="cobertura-label">46.6% del padrón</div></div>
+                    <div class="cobertura-card"><h4>📊 Con Cobertura</h4><div class="cobertura-number" id="hipertensosConCoberturaPadron">0</div><div class="cobertura-label">% configurable</div></div>
+                    <div class="cobertura-card"><h4>✅ Hipertensos Atendidos</h4><div class="cobertura-number" id="hipertensosAtendidosPadron">0</div><div class="cobertura-label">Pacientes únicos con HTA</div></div>
+                    <div class="cobertura-card"><h4>📈 Cobertura Padrón</h4><div class="cobertura-number" id="coberturaPadronHipertension">0%</div><div class="cobertura-label">% sobre con cobertura</div></div>
+                </div>
             </div>
-            <div class="metric-card info">
-                <h4>📈 Cobertura Real</h4>
-                <div class="metric-value" id="db-cobertura">0%</div>
-                <p class="metric-desc">% Atendidos vs Potenciales</p>
+            
+            <div class="stats-box">
+                <div class="stats-title">📈 COBERTURA SOBRE ATENDIDOS EN SALUD</div>
+                <div class="cobertura-grid">
+                    <div class="cobertura-card"><h4>👥 Total Pacientes</h4><div class="cobertura-number" id="totalAtencionesHTA">0</div><div class="cobertura-label">pacientes en período</div></div>
+                    <div class="cobertura-card"><h4>👤 Adultos Atendidos</h4><div class="cobertura-number" id="adultosAtendidosHTA">0</div><div class="cobertura-label">Pacientes ≥20 años</div></div>
+                    <div class="cobertura-card"><h4>🎯 Hipertensos Potenciales</h4><div class="cobertura-number" id="hipertensosPotencialesAtendidos">0</div><div class="cobertura-label">46.6% de adultos atendidos</div></div>
+                    <div class="cobertura-card"><h4>✅ Hipertensos Detectados</h4><div class="cobertura-number" id="hipertensosDetectadosAtendidos">0</div><div class="cobertura-label">Pacientes con HTA</div></div>
+                    <div class="cobertura-card"><h4>🎯 Cobertura sobre Potenciales</h4><div class="cobertura-number" id="coberturaPotencialesHipertension">0%</div><div class="cobertura-label">% detectados vs esperados</div></div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-view" onclick="verPacientes('hipertension')"><i class="fas fa-eye"></i> VER PACIENTES</button>
+                <button class="btn-export btn-success" onclick="exportarPacientesUnicos('hipertension')"><i class="fas fa-users"></i> EXPORTAR PACIENTES ÚNICOS</button>
+                <button class="btn-export" onclick="exportarTodasPrestaciones('hipertension')"><i class="fas fa-list"></i> EXPORTAR PRESTACIONES</button>
+            </div>
+            
+            <div class="stats-box">
+                <div class="stats-title">📋 Estado de Seguimiento</div>
+                <div class="seguimiento-grid">
+                    <div class="seguimiento-item"><div class="seguimiento-label">📍 Ct. Única (1 consulta en 2 años)</div><div class="seguimiento-value" id="hipertensionCtUnica">0</div></div>
+                    <div class="seguimiento-item"><div class="seguimiento-label">📌 Con 1 Control (≥2 consultas en 2 años)</div><div class="seguimiento-value" id="hipertensionUnControl">0</div></div>
+                    <div class="seguimiento-item"><div class="seguimiento-label">✅ En Seguimiento (1 consulta/año ×2 años)</div><div class="seguimiento-value" id="hipertensionSeguimiento">0</div></div>
+                </div>
+            </div>
+            
+            <div class="table-container"><table class="data-table"><thead><tr><th>APELLIDO</th><th>NOMBRE</th><th>DNI</th><th>EDAD</th><th>LC</th><th>DX</th><th>CONSULTAS</th><th>ESTADO SEGUIMIENTO</th><th>ÚLTIMA PRESTACIÓN</th></tr></thead><tbody id="hipertensionTableBody"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="seccion-ceb" class="seccion">
+        <div class="card full-width-card">
+            <h3><i class="fas fa-exclamation-triangle"></i> Cobertura Efectiva Básica (CEB) <span class="badge-correction">SEGUIMIENTO POR CATEGORÍA</span></h3>
+            <div class="filter-bar" style="margin-bottom:16px;padding:16px">
+                <div class="filter-group"><label><i class="fas fa-calendar"></i> FILTRAR POR AÑO</label><select id="cebAnioFilter"><option value="all">Todos</option></select></div>
+                <button class="reset-btn" id="resetCebFilters"><i class="fas fa-undo-alt"></i> LIMPIAR FILTROS</button>
+                <button class="btn-export" id="exportCebN" style="margin-left:auto"><i class="fas fa-download"></i> EXPORTAR CEB=N POR CATEGORÍA</button>
+            </div>
+            
+            <div id="cebCategoriasContainer">
+                <div class="mensaje-sin-datos">
+                    <i class="fas fa-filter"></i>
+                    <p>Seleccione un año para ver el seguimiento de CEB por categoría</p>
+                </div>
             </div>
         </div>
+    </div>
+    
+    <div style="text-align:center;margin-top:32px;padding:18px;background:var(--bg-tertiary);border-top:3px solid var(--censo-turquoise)">VILLA ALLENDE X02780 - X20011 · Dashboard Operativo · Datos oficiales (SIGIPSA)</div>
+</div>
 
-        <div class="table-container">
-            <h4>📋 Detalle Nominal de Pacientes con Diabetes</h4>
-            <table id="table-diabetes">
-                <thead>
-                    <tr>
-                        <th>APELLIDO</th>
-                        <th>NOMBRE</th>
-                        <th>DNI</th>
-                        <th>EDAD</th>
-                        <th>DX</th>
-                        <th>ESTADO</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="6" class="text-center">Cargando base de datos...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+<script>
+const DATA_URL = 'https://script.google.com/macros/s/AKfycbwRKEZyG16sngLPkOmyH96ts9Rkqo6IqvRvzVVfNI0A3YeLVLAXFfLIiO_VHQZzgi_9/exec';
+const POBLACION_ADULTA_CENSO = 28224;
+const PORCENTAJE_DBT = 0.109;
+const PORCENTAJE_HTA = 0.466;
 
-    <!-- Módulo Hipertensión -->
-    <section class="card section-container">
-        <div class="section-header">
-            <h3><i class="fas fa-heartbeat"></i> Hipertensión - Cobertura Real vs Esperada</h3>
-            <span class="status-pill load-pill" id="hta-status">CARGANDO...</span>
-        </div>
+const CATEGORIAS_CEB = [
+    { nombre: 'Niños de 0 a 6 años', key: 'NIÑOS DE 0 A 6 AÑOS', padron: 617, objetivo: 474 },
+    { nombre: 'Niños de 6 a 9 años', key: 'NIÑOS DE 6 A 9 AÑOS', padron: 586, objetivo: 333 },
+    { nombre: 'Adolescentes de 10 a 19 años', key: 'ADOLESCENTES DE 10 A 19 AÑOS', padron: 1726, objetivo: 871 },
+    { nombre: 'Mayores de 20 años', key: 'MAYORES DE 20 AÑOS', padron: 5611, objetivo: 1791 }
+];
 
-        <div class="metric-row">
-            <div class="metric-card">
-                <h4>🏘️ Población Adulta</h4>
-                <div class="metric-value">28.224</div>
-                <p class="metric-desc">Adultos ≥20 años (censo)</p>
+const CODIGOS_DIABETES = ['C050A98', 'C050T89', 'C050T90'];
+const CODIGOS_HIPERTENSION = ['C074K22', 'C044K22', 'C044K86'];
+
+let allData = [];
+let charts = {};
+let currentChart = 'tipoPrestacion';
+let chartMode = 'prestaciones';
+let filtros = { efector: 'all', anio: 'all', tipoPrestacion: 'all', procedimiento: 'all', dx: 'all', os: 'all' };
+let diabetesFiltroAnio = 'all';
+let diabetesFiltroEstado = 'all';
+let hipertensionFiltroAnio = 'all';
+let hipertensionFiltroEstado = 'all';
+let cebFiltros = { anio: 'all' };
+let diabetesPacientesLista = [];
+let hipertensionPacientesLista = [];
+let graficoActualData = null;
+let datosOriginalesGrafico = [];
+
+const COLOR_PALETTE = [
+    '#6A1B9A', '#00AFAF', '#ff6b35', '#1e90ff', '#00c853', 
+    '#ffc107', '#ff4444', '#8e44ad', '#00dddd', '#ff8c00',
+    '#e74c3c', '#2ecc71', '#3498db', '#f39c12', '#9b59b6'
+];
+
+function limpiarTexto(s) { return s ? String(s).trim() || '-' : '-'; }
+function parsearFecha(f) { if (!f) return null; if (f instanceof Date) return f; let s = String(f).trim(), p = s.split('/'); if (p.length === 3) { let d = parseInt(p[0]), m = parseInt(p[1]), a = parseInt(p[2]); if (!isNaN(d) && !isNaN(m) && !isNaN(a) && a > 1900 && a < 2030) return new Date(a, m - 1, d); } let iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2]) - 1, parseInt(iso[3])); return null; }
+function formatearFecha(fecha) { if (!fecha) return '-'; let d = parsearFecha(fecha); if (d && !isNaN(d.getTime())) { return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } return '-'; }
+function extraerAnio(f) { let fecha = parsearFecha(f); return fecha && !isNaN(fecha.getTime()) ? fecha.getFullYear() : null; }
+function limpiarNumero(v) { if (v === null || v === undefined) return 0; if (typeof v === 'number') return v; let n = parseFloat(String(v).replace(/[$,\s]/g, '')); return isNaN(n) ? 0 : n; }
+function limpiarDNI(v) { return v ? String(v).replace(/[^0-9]/g, '') : '-'; }
+
+function getCategoriaEdad(row) { 
+    let cat = row['CATEGORIA'] || 'Sin dato';
+    return limpiarTexto(cat);
+}
+
+function esDiabetico(r) { 
+    let codigo = (r['SIGLA PROCED'] || '').trim().toUpperCase();
+    return CODIGOS_DIABETES.includes(codigo);
+}
+
+function esHipertenso(r) { 
+    let codigo = (r['SIGLA PROCED'] || '').trim().toUpperCase();
+    return CODIGOS_HIPERTENSION.includes(codigo);
+}
+
+function calcularEstadoSeguimiento(p) { 
+    if (!p || !p.length) return 'Sin consultas'; 
+    let fechas = p.map(x => parsearFecha(x['FECHA PRESTACION'])).filter(f => f && !isNaN(f.getTime())); 
+    if (!fechas.length) return 'Sin consultas'; 
+    fechas.sort((a, b) => b - a); 
+    let hoy = new Date(), l2 = new Date(hoy); l2.setFullYear(hoy.getFullYear() - 2); 
+    let l1 = new Date(hoy); l1.setFullYear(hoy.getFullYear() - 1); 
+    let c2 = fechas.filter(f => f >= l2), u = c2.filter(f => f >= l1).length, s = c2.filter(f => f < l1 && f >= l2).length; 
+    if (u >= 1 && s >= 1) return 'En Seguimiento'; 
+    if (u + s >= 2) return 'Con 1 Control'; 
+    if (c2.length === 1) return 'Ct. Única'; 
+    return 'Seguimiento irregular'; 
+}
+
+function getDatosFiltrados() { 
+    let d = [...allData]; 
+    if (filtros.efector !== 'all') d = d.filter(x => x['EFECTOR'] === filtros.efector); 
+    if (filtros.anio !== 'all') d = d.filter(x => x.anioAtencion && x.anioAtencion.toString() === filtros.anio); 
+    if (filtros.tipoPrestacion !== 'all') d = d.filter(x => x['TIPO PRESTACIÓN'] === filtros.tipoPrestacion); 
+    if (filtros.procedimiento !== 'all') d = d.filter(x => x['PROCEDIMIENTO'] === filtros.procedimiento); 
+    if (filtros.dx !== 'all') d = d.filter(x => x['DX'] === filtros.dx); 
+    if (filtros.os !== 'all') d = d.filter(x => x['O.S'] === filtros.os); 
+    return d; 
+}
+
+function getFrecuencias(arr, col, lim) { 
+    let m = new Map(); 
+    for (let f of arr) { 
+        let v = f[col]; 
+        if (!v) v = 'Sin dato'; 
+        m.set(String(v), (m.get(String(v)) || 0) + 1); 
+    } 
+    let s = Array.from(m.entries()).sort((a, b) => b[1] - a[1]); 
+    if (lim) s = s.slice(0, lim); 
+    return { labels: s.map(x => x[0]), values: s.map(x => x[1]), total: arr.length }; 
+}
+
+function getFrecuenciasPorAnio(arr, col, lim) {
+    let anios = [...new Set(arr.map(x => x.anioAtencion).filter(a => a))].sort();
+    let allLabels = new Set();
+    let dataPorAnio = {};
+    let totalPorAnio = {};
+    
+    anios.forEach(anio => {
+        let dataAnio = arr.filter(x => x.anioAtencion === anio);
+        let freq = getFrecuencias(dataAnio, col, lim);
+        dataPorAnio[anio] = freq;
+        totalPorAnio[anio] = dataAnio.length;
+        freq.labels.forEach(l => allLabels.add(l));
+    });
+    
+    let labels = Array.from(allLabels);
+    let datasets = anios.map((anio, idx) => {
+        let freq = dataPorAnio[anio] || { labels: [], values: [] };
+        let total = totalPorAnio[anio] || 1;
+        let values = labels.map(l => {
+            let idx = freq.labels.indexOf(l);
+            return idx >= 0 ? freq.values[idx] : 0;
+        });
+        let colors = ['#6A1B9A', '#00AFAF'];
+        return {
+            label: anio.toString(),
+            data: values,
+            backgroundColor: colors[idx % colors.length] + '80',
+            borderColor: colors[idx % colors.length],
+            borderWidth: 2,
+            borderRadius: 0,
+            barThickness: 30,
+            _total: total
+        };
+    });
+    
+    return { labels, datasets, anios, totalPorAnio };
+}
+
+function getFrecuenciasPacientesPorAnio(arr, col, lim) {
+    let anios = [...new Set(arr.map(x => x.anioAtencion).filter(a => a))].sort();
+    let allLabels = new Set();
+    let dataPorAnio = {};
+    let totalPorAnio = {};
+    
+    anios.forEach(anio => {
+        let dataAnio = arr.filter(x => x.anioAtencion === anio);
+        let labelsCount = new Map();
+        for (let row of dataAnio) {
+            let clave = row['CLAVE BENEFICIARIO'];
+            if (!clave) continue;
+            let val = row[col];
+            if (!val) val = 'Sin dato';
+            let key = String(val);
+            if (!labelsCount.has(key)) labelsCount.set(key, new Set());
+            labelsCount.get(key).add(clave);
+        }
+        let entries = Array.from(labelsCount.entries()).map(([k, v]) => [k, v.size]);
+        entries.sort((a, b) => b[1] - a[1]);
+        if (lim) entries = entries.slice(0, lim);
+        let freq = { labels: entries.map(x => x[0]), values: entries.map(x => x[1]) };
+        dataPorAnio[anio] = freq;
+        totalPorAnio[anio] = new Set(dataAnio.map(x => x['CLAVE BENEFICIARIO']).filter(c => c)).size;
+        freq.labels.forEach(l => allLabels.add(l));
+    });
+    
+    let labels = Array.from(allLabels);
+    let datasets = anios.map((anio, idx) => {
+        let freq = dataPorAnio[anio] || { labels: [], values: [] };
+        let total = totalPorAnio[anio] || 1;
+        let values = labels.map(l => {
+            let idx = freq.labels.indexOf(l);
+            return idx >= 0 ? freq.values[idx] : 0;
+        });
+        let colors = ['#6A1B9A', '#00AFAF'];
+        return {
+            label: anio.toString(),
+            data: values,
+            backgroundColor: colors[idx % colors.length] + '80',
+            borderColor: colors[idx % colors.length],
+            borderWidth: 2,
+            borderRadius: 0,
+            barThickness: 30,
+            _total: total
+        };
+    });
+    
+    return { labels, datasets, anios, totalPorAnio };
+}
+
+function formatearNumero(n) { if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M'; if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k'; return n.toString(); }
+function calcularPorcentajeCambio(a, p) { return (!p || p === 0) ? null : ((a - p) / p) * 100; }
+
+function exportToXLSX(data, filename, sheetName) {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`);
+}
+
+async function cargarDatos() {
+    let modal = document.getElementById('loadingModal'), pf = document.getElementById('modalProgressFill'), st = document.getElementById('modalStatusText'), ct = document.getElementById('modalCountText');
+    modal.style.display = 'flex'; pf.style.width = '10%'; st.innerHTML = 'Conectando con SIGIPSA...';
+    try {
+        pf.style.width = '30%'; let r = await fetch(DATA_URL + '?t=' + Date.now()); if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        pf.style.width = '60%'; let j = await r.json(); if (!j.success) throw new Error(j.error || 'Error');
+        if (!j.data || !Array.isArray(j.data)) throw new Error('No hay datos');
+        pf.style.width = '80%';
+        
+        let rawMapped = j.data.map(item => { 
+            let fecha = item['FECHA PRESTACION'], importe = limpiarNumero(item['IMPORTE FACTURADO']), edad = null; 
+            if (item['EDAD']) { edad = parseInt(item['EDAD']); if (isNaN(edad)) edad = null; } 
+            return { ...item, 
+                mesAtencion: null, 
+                anioAtencion: extraerAnio(fecha), 
+                importeFacturado: importe, 
+                edadNumerica: edad, 
+                categoriaEdad: getCategoriaEdad(item),
+                DNI_limpio: limpiarDNI(item['DNI']), 
+                APELLIDO: limpiarTexto(item['APELLIDO']), 
+                NOMBRE: limpiarTexto(item['NOMBRE']), 
+                LC: limpiarTexto(item['LC']), 
+                DX: limpiarTexto(item['DX']), 
+                PROCEDIMIENTO: limpiarTexto(item['PROCEDIMIENTO']), 
+                'TIPO PRESTACIÓN': limpiarTexto(item['TIPO PRESTACIÓN']), 
+                'O.S': limpiarTexto(item['O.S']), 
+                CATEGORIA: limpiarTexto(item['CATEGORIA']), 
+                EFECTOR: limpiarTexto(item['EFECTOR']), 
+                'CÓDIGO PRESTACIÓN': limpiarTexto(item['CODIGO PRESTACION']),
+                'SIGLA PROCED': limpiarTexto(item['SIGLA PROCED'])
+            }; 
+        });
+        
+        allData = rawMapped.filter(x => x.anioAtencion === 2025 || x.anioAtencion === 2026);
+        
+        pf.style.width = '100%'; st.innerHTML = '¡Base cargada!'; ct.innerHTML = `${allData.length} registros`;
+        let dbt = allData.filter(x => esDiabetico(x)).length, hta = allData.filter(x => esHipertenso(x)).length;
+        let dbtUnicos = new Set(allData.filter(x => esDiabetico(x)).map(x => x['CLAVE BENEFICIARIO']).filter(c => c)).size;
+        let htaUnicos = new Set(allData.filter(x => esHipertenso(x)).map(x => x['CLAVE BENEFICIARIO']).filter(c => c)).size;
+        document.getElementById('diabetesBadge').innerHTML = `${dbtUnicos} DIABÉTICOS | ${dbt} PRESTACIONES`;
+        document.getElementById('hipertensionBadge').innerHTML = `${htaUnicos} HIPERTENSOS | ${hta} PRESTACIONES`;
+        setTimeout(() => modal.style.display = 'none', 500);
+        actualizarFiltros(); renderizarTodo();
+        document.getElementById('syncStatus').innerHTML = `<i class="fas fa-check-circle"></i> ${allData.length} reg | 🩸${dbtUnicos} diabéticos | ❤️${htaUnicos} hipertensos`;
+    } catch (e) { st.innerHTML = 'Error: ' + e.message; setTimeout(() => modal.style.display = 'none', 2000); }
+}
+
+function actualizarFiltros() {
+    let efectores = new Set(allData.map(d => d['EFECTOR']).filter(e => e && e !== '-'));
+    let opEfector = '<option value="all">Todos</option>' + Array.from(efectores).sort().map(e => `<option value="${e}">${e}</option>`).join('');
+    document.getElementById('efectorFilter').innerHTML = opEfector;
+    
+    let anios = new Set(allData.map(d => d.anioAtencion).filter(a => a)), opAnio = '<option value="all">Todos</option>' + Array.from(anios).sort().reverse().map(a => `<option value="${a}">${a}</option>`).join('');
+    document.getElementById('anioFilter').innerHTML = opAnio; document.getElementById('cebAnioFilter').innerHTML = opAnio; document.getElementById('diabetesAnioFilter').innerHTML = opAnio; document.getElementById('hipertensionAnioFilter').innerHTML = opAnio;
+    let tipos = new Set(allData.map(d => d['TIPO PRESTACIÓN']).filter(t => t)); document.getElementById('tipoPrestacionFilter').innerHTML = '<option value="all">Todas</option>' + Array.from(tipos).sort().map(t => `<option value="${t}">${t}</option>`).join('');
+    let procedimientos = new Set(allData.map(d => d['PROCEDIMIENTO']).filter(p => p && p !== '-')); document.getElementById('procedimientoFilter').innerHTML = '<option value="all">Todos</option>' + Array.from(procedimientos).sort().map(p => `<option value="${p}">${p}</option>`).join('');
+    let dxs = new Set(allData.map(d => d['DX']).filter(dx => dx && dx !== '-')); document.getElementById('dxFilter').innerHTML = '<option value="all">Todos</option>' + Array.from(dxs).sort().map(dx => `<option value="${dx}">${dx}</option>`).join('');
+    let oses = new Set(allData.map(d => d['O.S']).filter(o => o)); document.getElementById('osFilter').innerHTML = '<option value="all">Todas</option>' + Array.from(oses).sort().map(o => `<option value="${o}">${o}</option>`).join('');
+}
+
+function renderizarTodo() { 
+    let d = getDatosFiltrados(); 
+    if (!d.length) return; 
+    renderizarKPIs(d); 
+    renderizarComparativaAnual(); 
+    renderizarGraficoActual(); 
+    renderizarDiabetes(); 
+    renderizarHipertension(); 
+    renderizarCEB(); 
+}
+
+function renderizarKPIs(d) { 
+    let p = new Set(d.map(x => x['CLAVE BENEFICIARIO']).filter(c => c)).size; 
+    let tf = d.reduce((s, x) => s + (x.importeFacturado || 0), 0);
+    let promedioPorPaciente = p > 0 ? Math.round(tf / p) : 0;
+    let promedioPorPrestacion = d.length > 0 ? Math.round(tf / d.length) : 0;
+    document.getElementById('kpiGenerales').innerHTML = `
+        <div class="kpi-card"><div class="kpi-title"><i class="fas fa-users"></i> PERSONAS ASISTIDAS</div><div class="kpi-value">${p.toLocaleString()}</div><div class="kpi-detail">pacientes</div></div>
+        <div class="kpi-card"><div class="kpi-title"><i class="fas fa-chart-line"></i> TOTAL PRESTACIONES</div><div class="kpi-value">${d.length.toLocaleString()}</div><div class="kpi-detail">prestaciones</div></div>
+        <div class="kpi-card"><div class="kpi-title"><i class="fas fa-dollar-sign"></i> PROM. FACTURADO X PACIENTE</div><div class="kpi-value">$${promedioPorPaciente.toLocaleString()}</div><div class="kpi-detail">por paciente</div></div>
+        <div class="kpi-card"><div class="kpi-title"><i class="fas fa-dollar-sign"></i> PROM. FACTURADO X PRESTACIÓN</div><div class="kpi-value">$${promedioPorPrestacion.toLocaleString()}</div><div class="kpi-detail">por prestación</div></div>
+        <div class="kpi-card"><div class="kpi-title"><i class="fas fa-dollar-sign"></i> TOTAL FACTURADO</div><div class="kpi-value">$${formatearNumero(tf)}</div><div class="kpi-detail">$${tf.toLocaleString()}</div></div>`; 
+}
+
+function renderizarComparativaAnual() { 
+    let anios = [...new Set(allData.map(d => d.anioAtencion).filter(a => a))].sort(), html = ''; 
+    for (let i = 0; i < anios.length; i++) { 
+        let anio = anios[i], da = allData.filter(d => d.anioAtencion === anio), pac = new Set(da.map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size, prest = da.length, fact = da.reduce((s, d) => s + (d.importeFacturado || 0), 0);
+        let promPac = pac > 0 ? Math.round(fact / pac) : 0;
+        let promPres = prest > 0 ? Math.round(fact / prest) : 0;
+        let cPac = '', cPrest = '', cFact = '', cPromPac = '', cPromPres = ''; 
+        if (i > 0) { 
+            let ant = anios[i - 1], dAnt = allData.filter(d => d.anioAtencion === ant), pAnt = new Set(dAnt.map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size, prAnt = dAnt.length, fAnt = dAnt.reduce((s, d) => s + (d.importeFacturado || 0), 0);
+            let promPacAnt = pAnt > 0 ? Math.round(fAnt / pAnt) : 0;
+            let promPresAnt = prAnt > 0 ? Math.round(fAnt / prAnt) : 0;
+            let cp = calcularPorcentajeCambio(pac, pAnt), cpr = calcularPorcentajeCambio(prest, prAnt), cf = calcularPorcentajeCambio(fact, fAnt);
+            let cpp = calcularPorcentajeCambio(promPac, promPacAnt), cppr = calcularPorcentajeCambio(promPres, promPresAnt);
+            if (cp !== null) cPac = `<span class="${cp >= 0 ? 'trend-up' : 'trend-down'}">${cp >= 0 ? '↑' : '↓'} ${Math.abs(cp).toFixed(1)}%</span>`; 
+            if (cpr !== null) cPrest = `<span class="${cpr >= 0 ? 'trend-up' : 'trend-down'}">${cpr >= 0 ? '↑' : '↓'} ${Math.abs(cpr).toFixed(1)}%</span>`; 
+            if (cf !== null) cFact = `<span class="${cf >= 0 ? 'trend-up' : 'trend-down'}">${cf >= 0 ? '↑' : '↓'} ${Math.abs(cf).toFixed(1)}%</span>`;
+            if (cpp !== null) cPromPac = `<span class="${cpp >= 0 ? 'trend-up' : 'trend-down'}">${cpp >= 0 ? '↑' : '↓'} ${Math.abs(cpp).toFixed(1)}%</span>`;
+            if (cppr !== null) cPromPres = `<span class="${cppr >= 0 ? 'trend-up' : 'trend-down'}">${cppr >= 0 ? '↑' : '↓'} ${Math.abs(cppr).toFixed(1)}%</span>`;
+        } 
+        html += `<div class="year-card"><div class="year-title">${anio}</div><div class="year-stats">
+            <div class="year-stat"><span class="year-stat-label">👥 Pacientes</span><span class="year-stat-value">${pac.toLocaleString()} ${cPac}</span></div>
+            <div class="year-stat"><span class="year-stat-label">📋 Prestaciones</span><span class="year-stat-value">${prest.toLocaleString()} ${cPrest}</span></div>
+            <div class="year-stat"><span class="year-stat-label">💰 Facturación</span><span class="year-stat-value">$${formatearNumero(fact)} ${cFact}</span></div>
+            <div class="year-stat"><span class="year-stat-label">💵 Prom. x Paciente</span><span class="year-stat-value">$${promPac.toLocaleString()} ${cPromPac}</span></div>
+            <div class="year-stat"><span class="year-stat-label">💵 Prom. x Prestación</span><span class="year-stat-value">$${promPres.toLocaleString()} ${cPromPres}</span></div>
+        </div></div>`; 
+    } 
+    document.getElementById('comparativaAnual').innerHTML = html; 
+}
+
+function renderizarGraficoActual() {
+    let d = getDatosFiltrados();
+    if (!d.length) return;
+    
+    datosOriginalesGrafico = d;
+    
+    let titles = {
+        tipoPrestacion: '📊 Tipo de Prestación',
+        procedimientos: '🔬 Top Procedimientos',
+        dx: '📋 Top Diagnósticos',
+        lc: '📌 Línea de Cuidado',
+        categoriaEdad: '👥 Distribución por Categoría (Edad)',
+        sexo: '⚥ Distribución por Sexo',
+        os: '🏥 Obras Sociales'
+    };
+    
+    let modeLabel = chartMode === 'pacientes' ? ' (Pacientes Únicos)' : ' (Prestaciones)';
+    document.getElementById('chartTitle').innerHTML = (titles[currentChart] || 'Gráfico') + modeLabel;
+    
+    let exportOSConBtn = document.getElementById('exportOSConCoberturaBtn');
+    let exportOSSinBtn = document.getElementById('exportOSSinDatosBtn');
+    if (currentChart === 'os') {
+        exportOSConBtn.style.display = 'inline-block';
+        exportOSSinBtn.style.display = 'inline-block';
+    } else {
+        exportOSConBtn.style.display = 'none';
+        exportOSSinBtn.style.display = 'none';
+    }
+    
+    if (currentChart === 'tipoPrestacion') renderizarTipoPrestacion(d);
+    else if (currentChart === 'procedimientos') renderizarTopProcedimientos(d);
+    else if (currentChart === 'dx') renderizarTopDX(d);
+    else if (currentChart === 'lc') renderizarTopLC(d);
+    else if (currentChart === 'categoriaEdad') renderizarCategoriaEdad(d);
+    else if (currentChart === 'sexo') renderizarSexo(d);
+    else if (currentChart === 'os') renderizarOS(d);
+}
+
+function renderizarGraficoBarrasPorAnio(d, col, titulo, color, top) {
+    let freq = chartMode === 'pacientes' ? getFrecuenciasPacientesPorAnio(d, col, top) : getFrecuenciasPorAnio(d, col, top);
+    
+    let ctx = document.getElementById('activeChart');
+    if (charts.active) charts.active.destroy();
+    if (!freq.labels.length) return;
+    
+    graficoActualData = {
+        titulo: titulo,
+        modo: chartMode,
+        labels: freq.labels,
+        datasets: freq.datasets,
+        anios: freq.anios,
+        totalPorAnio: freq.totalPorAnio
+    };
+    
+    let labels = freq.labels.map(l => l.length > 20 ? l.substring(0, 17) + '...' : l);
+    let anios = freq.anios;
+    
+    charts.active = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: freq.datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { labels: { color: '#b0b0c0', font: { weight: 'bold' } } },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#fff',
+                    font: { weight: 'bold', size: 10 },
+                    formatter: function(v) { return v === 0 ? '' : v.toLocaleString(); },
+                    offset: 4
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#b0b0c0', maxRotation: 45 }, grid: { display: false } },
+                y: { 
+                    ticks: { color: '#b0b0c0' },
+                    beginAtZero: true,
+                    suggestedMax: function(context) {
+                        let maxVal = 0;
+                        context.chart.data.datasets.forEach(ds => { ds.data.forEach(v => { if (v > maxVal) maxVal = v; }); });
+                        return maxVal * 1.25;
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+    let total = d.length;
+    let colorIdx = 0;
+    let detalleCategorias = freq.labels.map((label, idx) => {
+        let totalCat = 0;
+        let detallePorAnio = [];
+        freq.datasets.forEach((ds, dsIdx) => {
+            let val = ds.data[idx] || 0;
+            totalCat += val;
+            let anio = anios[dsIdx];
+            let totalAnio = freq.totalPorAnio[anio] || 1;
+            let pctAnio = totalAnio > 0 ? ((val / totalAnio) * 100).toFixed(1) : 0;
+            if (val > 0) detallePorAnio.push(`${anio}: ${val.toLocaleString()} (${pctAnio}%)`);
+        });
+        let pctTotal = total > 0 ? ((totalCat / total) * 100).toFixed(1) : 0;
+        let color = COLOR_PALETTE[colorIdx % COLOR_PALETTE.length];
+        colorIdx++;
+        return `<span class="insight-categoria"><span class="color-dot" style="background:${color}"></span><strong>${label}</strong>: ${totalCat.toLocaleString()} (${pctTotal}%) → ${detallePorAnio.join(' | ')}</span>`;
+    }).join('');
+    
+    document.getElementById('chartInsight').innerHTML = `<strong>📌 Distribución detallada:</strong><br>${detalleCategorias}`;
+}
+
+function renderizarTipoPrestacion(d) { renderizarGraficoBarrasPorAnio(d, 'TIPO PRESTACIÓN', 'Tipo de Prestación', '#6A1B9A', 10); }
+function renderizarTopProcedimientos(d) { renderizarGraficoBarrasPorAnio(d, 'PROCEDIMIENTO', 'Procedimientos', '#00AFAF', 8); }
+function renderizarTopDX(d) { renderizarGraficoBarrasPorAnio(d, 'DX', 'Diagnósticos', '#ff6b35', 8); }
+function renderizarTopLC(d) { renderizarGraficoBarrasPorAnio(d, 'LC', 'Línea de Cuidado', '#1e90ff', 10); }
+function renderizarCategoriaEdad(d) { renderizarGraficoBarrasPorAnio(d, 'categoriaEdad', 'Categoría Edad', '#6A1B9A', 10); }
+function renderizarSexo(d) { renderizarGraficoBarrasPorAnio(d, 'SEXO', 'Distribución Sexo', '#1e90ff', 5); }
+function renderizarOS(d) { renderizarGraficoBarrasPorAnio(d, 'O.S', 'Obras Sociales', '#6A1B9A', 8); }
+
+function exportarGraficoActual() {
+    if (!graficoActualData) { alert('No hay datos para exportar'); return; }
+    let data = graficoActualData;
+    let exportData = [];
+    data.labels.forEach((label, idx) => {
+        let row = { Categoria: label };
+        data.datasets.forEach((ds, dsIdx) => { row[`${data.anios[dsIdx]}`] = ds.data[idx] || 0; });
+        let total = 0;
+        data.datasets.forEach(ds => { total += ds.data[idx] || 0; });
+        row['Total'] = total;
+        exportData.push(row);
+    });
+    let totalRow = { Categoria: 'TOTAL POR AÑO' };
+    data.datasets.forEach((ds, dsIdx) => {
+        let totalAnio = 0;
+        ds.data.forEach(v => { totalAnio += v; });
+        totalRow[`${data.anios[dsIdx]}`] = totalAnio;
+    });
+    let totalGeneral = 0;
+    data.datasets.forEach(ds => { ds.data.forEach(v => { totalGeneral += v; }); });
+    totalRow['Total'] = totalGeneral;
+    exportData.push(totalRow);
+    exportToXLSX(exportData, `grafico_${data.titulo.toLowerCase().replace(/ /g, '_')}_${data.modo}`, 'Datos');
+    alert(`✅ Datos del gráfico exportados a XLSX`);
+}
+
+function exportarOSConCobertura() {
+    let d = datosOriginalesGrafico;
+    let exportData = [];
+    let clavesAgregadas = new Set();
+    
+    for (let row of d) {
+        let clave = row['CLAVE BENEFICIARIO'];
+        if (!clave || clavesAgregadas.has(clave)) continue;
+        let os = row['O.S'] || 'SIN DATO';
+        let tieneCobertura = (row['CEB'] === 'S' || row['CEB'] === 's');
+        let tieneOS = os !== 'SIN DATO' && os !== '-' && os !== 'SUMAR';
+        
+        if (tieneCobertura && tieneOS) {
+            clavesAgregadas.add(clave);
+            exportData.push({
+                'O.S': os, 'APELLIDO': row['APELLIDO'], 'NOMBRE': row['NOMBRE'], 'DNI': row['DNI_limpio'],
+                'FECHA ATENCIÓN': row['FECHA PRESTACION'] ? formatearFecha(row['FECHA PRESTACION']) : '-',
+                'CÓDIGO PRESTACIÓN': row['CÓDIGO PRESTACIÓN'] || '-', 'PROCEDIMIENTO': row['PROCEDIMIENTO'] || '-',
+                'CEB': row['CEB'] || '-', 'ESTADO': 'CON COBERTURA'
+            });
+        }
+    }
+    if (!exportData.length) { alert('No hay pacientes CON COBERTURA para exportar'); return; }
+    exportToXLSX(exportData, 'os_con_cobertura_pacientes_unicos', 'OS_Cobertura');
+    alert(`✅ Exportados ${exportData.length} pacientes únicos a XLSX`);
+}
+
+function exportarOSSinDatos() {
+    let d = datosOriginalesGrafico;
+    let exportData = [];
+    let clavesAgregadas = new Set();
+    
+    for (let row of d) {
+        let clave = row['CLAVE BENEFICIARIO'];
+        if (!clave || clavesAgregadas.has(clave)) continue;
+        let os = row['O.S'] || 'SIN DATO';
+        let tieneCobertura = (row['CEB'] === 'S' || row['CEB'] === 's');
+        let esSinDato = os === 'SIN DATO' || os === '-';
+        
+        if (!tieneCobertura && esSinDato) {
+            clavesAgregadas.add(clave);
+            exportData.push({
+                'O.S': os, 'APELLIDO': row['APELLIDO'], 'NOMBRE': row['NOMBRE'], 'DNI': row['DNI_limpio'],
+                'FECHA ATENCIÓN': row['FECHA PRESTACION'] ? formatearFecha(row['FECHA PRESTACION']) : '-',
+                'CÓDIGO PRESTACIÓN': row['CÓDIGO PRESTACIÓN'] || '-', 'PROCEDIMIENTO': row['PROCEDIMIENTO'] || '-',
+                'CEB': row['CEB'] || '-', 'ESTADO': 'SIN DATO'
+            });
+        }
+    }
+    if (!exportData.length) { alert('No hay pacientes SIN DATOS para exportar'); return; }
+    exportToXLSX(exportData, 'os_sin_datos_pacientes_unicos', 'OS_Sin_Datos');
+    alert(`✅ Exportados ${exportData.length} pacientes únicos a XLSX`);
+}
+
+function verPacientes(tipo) {
+    let pacientes = tipo === 'diabetes' ? diabetesPacientesLista : hipertensionPacientesLista;
+    let titulo = tipo === 'diabetes' ? 'PACIENTES DIABÉTICOS ATENDIDOS' : 'PACIENTES HIPERTENSOS ATENDIDOS';
+    if (!pacientes || pacientes.length === 0) { alert('No hay pacientes para mostrar'); return; }
+    let modalHtml = `
+        <div id="modalPacientes" class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h2><i class="fas fa-users"></i> ${titulo} (${pacientes.length} pacientes)</h2>
+                    <button class="modal-close" onclick="cerrarModal()">✕</button>
+                </div>
+                <div class="modal-search"><input type="text" id="modalSearchInput" placeholder="🔍 Buscar por apellido, nombre o DNI..." onkeyup="filtrarModalTabla()"></div>
+                <div class="modal-table-container">
+                    <table class="modal-table" id="modalTablaPacientes">
+                        <thead><tr><th>APELLIDO</th><th>NOMBRE</th><th>DNI</th><th>EDAD</th><th>CONSULTAS</th><th>ESTADO</th><th>ÚLTIMA FECHA</th></tr></thead>
+                        <tbody id="modalTablaBody">
+                            ${pacientes.map(p => `<tr><td>${p.apellido}</td><td>${p.nombre}</td><td>${p.dni}</td><td>${p.edad || '-'}</td><td>${p.cantidadConsultas}</td><td>${p.estadoSeguimiento}</td><td>${p.ultimaFecha}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-export" onclick="exportarModalToXLSX('${tipo}')"><i class="fas fa-file-excel"></i> EXPORTAR A XLSX</button>
+                    <button class="reset-btn" onclick="cerrarModal()">CERRAR</button>
+                </div>
             </div>
-            <div class="metric-card alert">
-                <h4>❤️ Hipertensos Potenciales</h4>
-                <div class="metric-value" id="hta-potenciales">0</div>
-                <p class="metric-desc">46.6% de población adulta</p>
-            </div>
-            <div class="metric-card success">
-                <h4>✅ Hipertensos Atendidos</h4>
-                <div class="metric-value" id="hta-atendidos">0</div>
-                <p class="metric-desc">Pacientes únicos con HTA</p>
-            </div>
-            <div class="metric-card info">
-                <h4>📈 Cobertura Real</h4>
-                <div class="metric-value" id="hta-cobertura">0%</div>
-                <p class="metric-desc">% Atendidos vs Potenciales</p>
-            </div>
-        </div>
+        </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
 
-        <div class="table-container">
-            <h4>📋 Detalle Nominal de Pacientes con Hipertensión</h4>
-            <table id="table-hta">
-                <thead>
-                    <tr>
-                        <th>APELLIDO</th>
-                        <th>NOMBRE</th>
-                        <th>DNI</th>
-                        <th>EDAD</th>
-                        <th>DX</th>
-                        <th>ESTADO</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="6" class="text-center">Cargando base de datos...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+function cerrarModal() { let modal = document.getElementById('modalPacientes'); if (modal) modal.remove(); }
+function filtrarModalTabla() {
+    let searchTerm = document.getElementById('modalSearchInput').value.toLowerCase();
+    document.querySelectorAll('#modalTablaBody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
+}
+function exportarModalToXLSX(tipo) {
+    let pacientes = tipo === 'diabetes' ? diabetesPacientesLista : hipertensionPacientesLista;
+    exportToXLSX(pacientes, tipo === 'diabetes' ? 'diabeticos_pacientes_unicos' : 'hipertensos_pacientes_unicos', 'Pacientes');
+    alert(`✅ Exportados ${pacientes.length} pacientes a XLSX`);
+}
 
-    <footer class="main-footer">
-        VILLA ALLENDE X02780 - X20011 · Dashboard Operativo · Datos oficiales (SIGIPSA)
-    </footer>
+function renderizarDiabetes() { 
+    let datos = diabetesFiltroAnio !== 'all' ? allData.filter(d => d.anioAtencion && d.anioAtencion.toString() === diabetesFiltroAnio) : allData;
+    let porcentajeCobertura = parseFloat(document.getElementById('diabetesPorcentajeCobertura').value) / 100;
+    let padronValue = parseInt(document.getElementById('diabetesPadronInput').value) || 5611;
+    
+    let totalPac = new Set(datos.map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size; 
+    let adultos = new Set(); 
+    for (let d of datos) if (d['CLAVE BENEFICIARIO'] && d.edadNumerica && d.edadNumerica >= 20) adultos.add(d['CLAVE BENEFICIARIO']); 
+    let adultosAtendidos = adultos.size; 
+    let diabeticosPotencialesLocalidad = Math.round(POBLACION_ADULTA_CENSO * PORCENTAJE_DBT);
+    let diabeticosConCobertura = Math.round(diabeticosPotencialesLocalidad * porcentajeCobertura);
+    let diabeticosAtendidos = new Set(datos.filter(d => esDiabetico(d)).map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size;
+    let coberturaPoblacional = diabeticosConCobertura > 0 ? (diabeticosAtendidos / diabeticosConCobertura) * 100 : 0;
+    let diabeticosPotencialesAtendidos = Math.round(adultosAtendidos * PORCENTAJE_DBT);
+    let coberturaPotenciales = diabeticosPotencialesAtendidos > 0 ? (diabeticosAtendidos / diabeticosPotencialesAtendidos) * 100 : 0;
+    
+    let diabeticosPotencialesPadron = Math.round(padronValue * PORCENTAJE_DBT);
+    let diabeticosConCoberturaPadron = Math.round(diabeticosPotencialesPadron * porcentajeCobertura);
+    let diabeticosAtendidosPadron = new Set(datos.filter(d => esDiabetico(d) && d.edadNumerica && d.edadNumerica >= 20).map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size;
+    let coberturaPadron = diabeticosConCoberturaPadron > 0 ? (diabeticosAtendidosPadron / diabeticosConCoberturaPadron) * 100 : 0;
+    
+    document.getElementById('totalAtencionesDBT').innerHTML = totalPac.toLocaleString();
+    document.getElementById('adultosAtendidosDBT').innerHTML = adultosAtendidos.toLocaleString();
+    document.getElementById('diabeticosPotencialesAtendidos').innerHTML = diabeticosPotencialesAtendidos.toLocaleString();
+    document.getElementById('diabeticosDetectadosAtendidos').innerHTML = diabeticosAtendidos.toLocaleString();
+    document.getElementById('coberturaPotencialesDiabetes').innerHTML = coberturaPotenciales.toFixed(1) + '%';
+    document.getElementById('diabeticosPotencialesLocalidad').innerHTML = diabeticosPotencialesLocalidad.toLocaleString();
+    document.getElementById('diabeticosConCobertura').innerHTML = diabeticosConCobertura.toLocaleString();
+    document.getElementById('diabeticosAtendidosLocalidad').innerHTML = diabeticosAtendidos.toLocaleString();
+    document.getElementById('coberturaPoblacionalDiabetes').innerHTML = coberturaPoblacional.toFixed(2) + '%';
+    document.getElementById('diabeticosPotencialesPadron').innerHTML = diabeticosPotencialesPadron.toLocaleString();
+    document.getElementById('diabeticosConCoberturaPadron').innerHTML = diabeticosConCoberturaPadron.toLocaleString();
+    document.getElementById('diabeticosAtendidosPadron').innerHTML = diabeticosAtendidosPadron.toLocaleString();
+    document.getElementById('coberturaPadronDiabetes').innerHTML = coberturaPadron.toFixed(2) + '%';
+    
+    let diabeticos = datos.filter(d => esDiabetico(d));
+    let mapa = new Map(); 
+    for (let p of diabeticos) { 
+        let clave = p['CLAVE BENEFICIARIO']; if (!clave) continue; 
+        if (!mapa.has(clave)) mapa.set(clave, { apellido: p['APELLIDO'], nombre: p['NOMBRE'], dni: p['DNI_limpio'], edad: p['EDAD'], lc: p['LC'], dx: p['DX'], prestaciones: [] }); 
+        mapa.get(clave).prestaciones.push(p); 
+    } 
+    let lista = Array.from(mapa.values()).map(p => { 
+        let estado = calcularEstadoSeguimiento(p.prestaciones); 
+        let cant = p.prestaciones.length; 
+        let ultima = obtenerUltimaPrestacion(p.prestaciones); 
+        return { apellido: p.apellido, nombre: p.nombre, dni: p.dni, edad: p.edad, lc: p.lc, dx: p.dx, cantidadConsultas: cant, estadoSeguimiento: estado, ultimaFecha: formatearFecha(ultima.fecha) }; 
+    }).sort((a, b) => { 
+        let fa = parsearFecha(a.ultimaFecha), fb = parsearFecha(b.ultimaFecha); 
+        return (fb || 0) - (fa || 0); 
+    }); 
+    
+    let listaFiltrada = diabetesFiltroEstado !== 'all' ? lista.filter(p => p.estadoSeguimiento === diabetesFiltroEstado) : lista;
+    diabetesPacientesLista = lista;
+    
+    let ctUnica = lista.filter(p => p.estadoSeguimiento === 'Ct. Única').length, unControl = lista.filter(p => p.estadoSeguimiento === 'Con 1 Control').length, seguimiento = lista.filter(p => p.estadoSeguimiento === 'En Seguimiento').length; 
+    document.getElementById('diabetesCtUnica').innerHTML = ctUnica.toLocaleString(); 
+    document.getElementById('diabetesUnControl').innerHTML = unControl.toLocaleString(); 
+    document.getElementById('diabetesSeguimiento').innerHTML = seguimiento.toLocaleString(); 
+    document.getElementById('diabetesTableBody').innerHTML = listaFiltrada.slice(0, 200).map(p => `<tr><td>${p.apellido}</td><td>${p.nombre}</td><td>${p.dni}</td><td>${p.edad}</td><td>${p.lc}</td><td>${(p.dx || '').substring(0, 50)}</td><td>${p.cantidadConsultas}</td><td>${p.estadoSeguimiento}</td><td>${p.ultimaFecha}</td></tr>`).join(''); 
+    window.diabetesPacientesUnicos = lista; window.diabetesTodasPrestaciones = diabeticos; window.diabetesListaFiltrada = listaFiltrada;
+}
 
-    <script src="app.js"></script>
+function renderizarHipertension() { 
+    let datos = hipertensionFiltroAnio !== 'all' ? allData.filter(d => d.anioAtencion && d.anioAtencion.toString() === hipertensionFiltroAnio) : allData;
+    let porcentajeCobertura = parseFloat(document.getElementById('hipertensionPorcentajeCobertura').value) / 100;
+    let padronValue = parseInt(document.getElementById('hipertensionPadronInput').value) || 5611;
+    
+    let totalPac = new Set(datos.map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size; 
+    let adultos = new Set(); 
+    for (let d of datos) if (d['CLAVE BENEFICIARIO'] && d.edadNumerica && d.edadNumerica >= 20) adultos.add(d['CLAVE BENEFICIARIO']); 
+    let adultosAtendidos = adultos.size; 
+    let hipertensosPotencialesLocalidad = Math.round(POBLACION_ADULTA_CENSO * PORCENTAJE_HTA);
+    let hipertensosConCobertura = Math.round(hipertensosPotencialesLocalidad * porcentajeCobertura);
+    let hipertensosAtendidos = new Set(datos.filter(d => esHipertenso(d)).map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size;
+    let coberturaPoblacional = hipertensosConCobertura > 0 ? (hipertensosAtendidos / hipertensosConCobertura) * 100 : 0;
+    let hipertensosPotencialesAtendidos = Math.round(adultosAtendidos * PORCENTAJE_HTA);
+    let coberturaPotenciales = hipertensosPotencialesAtendidos > 0 ? (hipertensosAtendidos / hipertensosPotencialesAtendidos) * 100 : 0;
+    
+    let hipertensosPotencialesPadron = Math.round(padronValue * PORCENTAJE_HTA);
+    let hipertensosConCoberturaPadron = Math.round(hipertensosPotencialesPadron * porcentajeCobertura);
+    let hipertensosAtendidosPadron = new Set(datos.filter(d => esHipertenso(d) && d.edadNumerica && d.edadNumerica >= 20).map(d => d['CLAVE BENEFICIARIO']).filter(c => c)).size;
+    let coberturaPadron = hipertensosConCoberturaPadron > 0 ? (hipertensosAtendidosPadron / hipertensosConCoberturaPadron) * 100 : 0;
+    
+    document.getElementById('totalAtencionesHTA').innerHTML = totalPac.toLocaleString();
+    document.getElementById('adultosAtendidosHTA').innerHTML = adultosAtendidos.toLocaleString();
+    document.getElementById('hipertensosPotencialesAtendidos').innerHTML = hipertensosPotencialesAtendidos.toLocaleString();
+    document.getElementById('hipertensosDetectadosAtendidos').innerHTML = hipertensosAtendidos.toLocaleString();
+    document.getElementById('coberturaPotencialesHipertension').innerHTML = coberturaPotenciales.toFixed(2) + '%';
+    document.getElementById('hipertensosPotencialesLocalidad').innerHTML = hipertensosPotencialesLocalidad.toLocaleString();
+    document.getElementById('hipertensosConCobertura').innerHTML = hipertensosConCobertura.toLocaleString();
+    document.getElementById('hipertensosAtendidosLocalidad').innerHTML = hipertensosAtendidos.toLocaleString();
+    document.getElementById('coberturaPoblacionalHipertension').innerHTML = coberturaPoblacional.toFixed(2) + '%';
+    document.getElementById('hipertensosPotencialesPadron').innerHTML = hipertensosPotencialesPadron.toLocaleString();
+    document.getElementById('hipertensosConCoberturaPadron').innerHTML = hipertensosConCoberturaPadron.toLocaleString();
+    document.getElementById('hipertensosAtendidosPadron').innerHTML = hipertensosAtendidosPadron.toLocaleString();
+    document.getElementById('coberturaPadronHipertension').innerHTML = coberturaPadron.toFixed(2) + '%';
+    
+    let hipertensos = datos.filter(d => esHipertenso(d));
+    let mapa = new Map(); 
+    for (let p of hipertensos) { 
+        let clave = p['CLAVE BENEFICIARIO']; if (!clave) continue; 
+        if (!mapa.has(clave)) mapa.set(clave, { apellido: p['APELLIDO'], nombre: p['NOMBRE'], dni: p['DNI_limpio'], edad: p['EDAD'], lc: p['LC'], dx: p['DX'], prestaciones: [] }); 
+        mapa.get(clave).prestaciones.push(p); 
+    } 
+    let lista = Array.from(mapa.values()).map(p => { 
+        let estado = calcularEstadoSeguimiento(p.prestaciones); 
+        let cant = p.prestaciones.length; 
+        let ultima = obtenerUltimaPrestacion(p.prestaciones); 
+        return { apellido: p.apellido, nombre: p.nombre, dni: p.dni, edad: p.edad, lc: p.lc, dx: p.dx, cantidadConsultas: cant, estadoSeguimiento: estado, ultimaFecha: formatearFecha(ultima.fecha) }; 
+    }).sort((a, b) => { 
+        let fa = parsearFecha(a.ultimaFecha), fb = parsearFecha(b.ultimaFecha); 
+        return (fb || 0) - (fa || 0); 
+    }); 
+    
+    let listaFiltrada = hipertensionFiltroEstado !== 'all' ? lista.filter(p => p.estadoSeguimiento === hipertensionFiltroEstado) : lista;
+    hipertensionPacientesLista = lista;
+    
+    let ctUnica = lista.filter(p => p.estadoSeguimiento === 'Ct. Única').length, unControl = lista.filter(p => p.estadoSeguimiento === 'Con 1 Control').length, seguimiento = lista.filter(p => p.estadoSeguimiento === 'En Seguimiento').length; 
+    document.getElementById('hipertensionCtUnica').innerHTML = ctUnica.toLocaleString(); 
+    document.getElementById('hipertensionUnControl').innerHTML = unControl.toLocaleString(); 
+    document.getElementById('hipertensionSeguimiento').innerHTML = seguimiento.toLocaleString(); 
+    document.getElementById('hipertensionTableBody').innerHTML = listaFiltrada.slice(0, 200).map(p => `<tr><td>${p.apellido}</td><td>${p.nombre}</td><td>${p.dni}</td><td>${p.edad}</td><td>${p.lc}</td><td>${(p.dx || '').substring(0, 50)}</td><td>${p.cantidadConsultas}</td><td>${p.estadoSeguimiento}</td><td>${p.ultimaFecha}</td></tr>`).join(''); 
+    window.hipertensionPacientesUnicos = lista; window.hipertensionTodasPrestaciones = hipertensos; window.hipertensionListaFiltrada = listaFiltrada;
+}
+
+function renderizarCEB() {
+    let anioFiltro = cebFiltros.anio;
+    if (anioFiltro === 'all') {
+        document.getElementById('cebCategoriasContainer').innerHTML = `<div class="mensaje-sin-datos"><i class="fas fa-filter"></i><p>Seleccione un año para ver el seguimiento de CEB por categoría</p></div>`;
+        return;
+    }
+    
+    let datosBase = allData.filter(d => d.anioAtencion && d.anioAtencion.toString() === anioFiltro);
+    let html = ''; let allPendientes = [];
+    
+    CATEGORIAS_CEB.forEach(cat => {
+        let datosCategoria = datosBase.filter(d => d['CATEGORIA'] === cat.key);
+        let pacientesUnicos = new Set(datosCategoria.map(d => d['CLAVE BENEFICIARIO']).filter(c => c));
+        let pacientesConCEB_S = new Set(); let pacientesSinCEB = new Set(); let prestacionesPorAnio = {};
+        
+        for (let row of datosCategoria) {
+            let clave = row['CLAVE BENEFICIARIO']; if (!clave) continue;
+            if (row['CEB'] === 'S' || row['CEB'] === 's') { pacientesConCEB_S.add(clave); } else { pacientesSinCEB.add(clave); }
+            let anio = row.anioAtencion; if (anio) { if (!prestacionesPorAnio[anio]) prestacionesPorAnio[anio] = new Set(); prestacionesPorAnio[anio].add(clave); }
+        }
+        
+        let totalAtendidos = pacientesUnicos.size; let conCEB = pacientesConCEB_S.size; let sinCEB = pacientesSinCEB.size;
+        let cumplimientoPadron = cat.padron > 0 ? (conCEB / cat.padron) * 100 : 0;
+        let cumplimientoObjetivo = cat.objetivo > 0 ? (conCEB / cat.objetivo) * 100 : 0;
+        let porcentajeAtendidosConCEB = totalAtendidos > 0 ? (conCEB / totalAtendidos) * 100 : 0;
+        
+        for (let row of datosCategoria) {
+            let clave = row['CLAVE BENEFICIARIO']; if (!clave) continue;
+            if (!(row['CEB'] === 'S' || row['CEB'] === 's') && !allPendientes.some(p => p['CLAVE BENEFICIARIO'] === clave)) {
+                let ultima = obtenerUltimaPrestacion([row]);
+                allPendientes.push({
+                    'APELLIDO': row['APELLIDO'], 'NOMBRE': row['NOMBRE'], 'DNI': row['DNI_limpio'], 'CLAVE BENEFICIARIO': clave,
+                    'O.S': row['O.S'] || 'SIN DATO', 'CATEGORIA': row['CATEGORIA'], 'EDAD': row['EDAD'], 'ÚLTIMA PRESTACIÓN': formatearFecha(ultima.fecha), 'CEB': row['CEB'] || 'N'
+                });
+            }
+        }
+        
+        let anios = Object.keys(prestacionesPorAnio).sort();
+        let detalleAnios = anios.map(a => `${a}: ${prestacionesPorAnio[a].size} pacientes`).join(' | ');
+        let barWidth = Math.min((conCEB / cat.padron) * 100, 100);
+        
+        html += `
+            <div class="ceb-categoria-card">
+                <div class="ceb-categoria-header">
+                    <span class="ceb-categoria-nombre">${cat.nombre}</span>
+                    <div class="ceb-categoria-stats">
+                        <span>📋 Padrón: <strong>${cat.padron}</strong></span> <span>🎯 Objetivo: <strong>${cat.objetivo}</strong></span> <span>👥 Atendidos: <strong>${totalAtendidos}</strong></span> <span>✅ CEB S: <strong>${conCEB}</strong></span> <span>⚠️ CEB N: <strong>${sinCEB}</strong></span> <span>📈 Cumplimiento vs Padrón: <strong class="${cumplimientoPadron >= 60 ? 'cumplimiento-verde' : 'cumplimiento-rojo'}">${cumplimientoPadron.toFixed(1)}%</strong></span> <span>🎯 Cumplimiento vs Objetivo: <strong style="color:${cumplimientoObjetivo >= 60 ? 'var(--green-success)' : 'var(--danger)'}">${cumplimientoObjetivo.toFixed(1)}%</strong></span> <span>📊 % Atendidos con CEB: <strong>${porcentajeAtendidosConCEB.toFixed(1)}%</strong></span>
+                    </div>
+                    <div style="display:flex;gap:6px">
+                        <button class="btn-export btn-small" onclick="exportarCEBCategoria('${cat.key}')"><i class="fas fa-download"></i> CEB=N</button>
+                        <button class="btn-export btn-small btn-success" onclick="exportarCEBCategoriaCompleta('${cat.key}')"><i class="fas fa-list"></i> Todos</button>
+                    </div>
+                </div>
+                <div class="barra-ceb">
+                    <div class="barra-ceb-fill" style="width:${barWidth}%;background:${cumplimientoPadron >= 60 ? 'var(--green-success)' : 'var(--danger)'}">${conCEB} / ${cat.padron}</div>
+                    <div class="barra-ceb-objetivo" style="left:${(cat.objetivo / cat.padron) * 100}%"></div>
+                </div>
+                <div style="margin-top:6px;font-size:.7rem;color:var(--text-muted)">📊 Evolución por año: ${detalleAnios || 'Sin datos'}</div>
+            </div>`;
+    });
+    document.getElementById('cebCategoriasContainer').innerHTML = html;
+    window.cebData = allPendientes;
+}
+
+function exportarCEBCategoria(categoriaKey) {
+    let datosBase = cebFiltros.anio !== 'all' ? allData.filter(d => d.anioAtencion && d.anioAtencion.toString() === cebFiltros.anio) : allData;
+    let pendientes = []; let clavesAgregadas = new Set();
+    
+    for (let row of datosBase.filter(d => d['CATEGORIA'] === categoriaKey)) {
+        let clave = row['CLAVE BENEFICIARIO']; if (!clave || clavesAgregadas.has(clave)) continue;
+        if (!(row['CEB'] === 'S' || row['CEB'] === 's')) {
+            clavesAgregadas.add(clave); let ultima = obtenerUltimaPrestacion([row]);
+            pendientes.push({ 'APELLIDO': row['APELLIDO'], 'NOMBRE': row['NOMBRE'], 'DNI': row['DNI_limpio'], 'CLAVE': clave, 'O.S': row['O.S'] || 'SIN DATO', 'CATEGORIA': row['CATEGORIA'], 'EDAD': row['EDAD'], 'ÚLTIMA PRESTACIÓN': formatearFecha(ultima.fecha), 'CEB': row['CEB'] || 'N' });
+        }
+    }
+    if (!pendientes.length) { alert('No hay pendientes CEB=N en esta categoría'); return; }
+    exportToXLSX(pendientes, `ceb_N_${categoriaKey.replace(/ /g, '_')}`, 'Pendientes_CEB');
+}
+
+function exportarCEBCategoriaCompleta(categoriaKey) {
+    let datosBase = cebFiltros.anio !== 'all' ? allData.filter(d => d.anioAtencion && d.anioAtencion.toString() === cebFiltros.anio) : allData;
+    let pacientes = []; let clavesAgregadas = new Set();
+    
+    for (let row of datosBase.filter(d => d['CATEGORIA'] === categoriaKey)) {
+        let clave = row['CLAVE BENEFICIARIO']; if (!clave || clavesAgregadas.has(clave)) continue;
+        clavesAgregadas.add(clave); let ultima = obtenerUltimaPrestacion([row]);
+        pacientes.push({ 'APELLIDO': row['APELLIDO'], 'NOMBRE': row['NOMBRE'], 'DNI': row['DNI_limpio'], 'CLAVE': clave, 'O.S': row['O.S'] || 'SIN DATO', 'CATEGORIA': row['CATEGORIA'], 'EDAD': row['EDAD'], 'CEB': row['CEB'] || 'N', 'CON CEB': (row['CEB'] === 'S' || row['CEB'] === 's') ? 'SÍ' : 'NO', 'ÚLTIMA PRESTACIÓN': formatearFecha(ultima.fecha) });
+    }
+    if (!pacientes.length) { alert('No hay pacientes en esta categoría'); return; }
+    exportToXLSX(pacientes, `ceb_completa_${categoriaKey.replace(/ /g, '_')}`, 'Pacientes_CEB');
+}
+
+function obtenerUltimaPrestacion(p) { 
+    if (!p || !p.length) return { fecha: '-', procedimiento: '-' }; 
+    let v = p.filter(x => x['FECHA PRESTACION']).sort((a, b) => { return (parsearFecha(b['FECHA PRESTACION']) || 0) - (parsearFecha(a['FECHA PRESTACION']) || 0); }); 
+    let ult = v[0]; return { fecha: ult?.['FECHA PRESTACION'] || '-', procedimiento: limpiarTexto(ult?.['PROCEDIMIENTO'] || '-').substring(0, 60) }; 
+}
+
+function exportarPacientesUnicos(tipo) { 
+    let data = tipo === 'diabetes' ? window.diabetesPacientesUnicos || [] : window.hipertensionPacientesUnicos || []; 
+    if (!data.length) { alert('No hay datos para exportar'); return; } 
+    exportToXLSX(data, tipo === 'diabetes' ? 'diabeticos_pacientes_unicos' : 'hipertensos_pacientes_unicos', 'Pacientes');
+}
+
+function exportarTodasPrestaciones(tipo) { 
+    let data = tipo === 'diabetes' ? window.diabetesTodasPrestaciones || [] : window.hipertensionTodasPrestaciones || []; 
+    if (!data.length) { alert('No hay datos para exportar'); return; } 
+    let exportData = data.map(p => ({ EFECTOR: p['EFECTOR'] || '', FECHA: p['FECHA PRESTACION'] ? formatearFecha(p['FECHA PRESTACION']) : '-', APELLIDO: p['APELLIDO'] || '', NOMBRE: p['NOMBRE'] || '', DNI: p['DNI_limpio'] || '', EDAD: p['EDAD'] || '', LC: p['LC'] || '', DX: p['DX'] || '', PROCEDIMIENTO: p['PROCEDIMIENTO'] || '', IMPORTE: p.importeFacturado || 0, ESTADO: p['ESTADO'] || '', OS: p['O.S'] || '', 'CODIGO PRESTACION': p['CÓDIGO PRESTACIÓN'] || '', 'SIGLA PROCED': p['SIGLA PROCED'] || '' }));
+    exportToXLSX(exportData, tipo === 'diabetes' ? 'diabeticos_todas_prestaciones' : 'hipertensos_todas_prestaciones', 'Prestaciones');
+}
+
+function exportarDiabetesFiltro() {
+    if (!window.diabetesListaFiltrada || !window.diabetesListaFiltrada.length) { alert('No hay pacientes que coincidan con el filtro'); return; }
+    exportToXLSX(window.diabetesListaFiltrada, `diabetes_${diabetesFiltroEstado}`, 'Pacientes');
+}
+
+function exportarHipertensionFiltro() {
+    if (!window.hipertensionListaFiltrada || !window.hipertensionListaFiltrada.length) { alert('No hay pacientes que coincidan con el filtro'); return; }
+    exportToXLSX(window.hipertensionListaFiltrada, `hipertension_${hipertensionFiltroEstado}`, 'Pacientes');
+}
+
+document.getElementById('efectorFilter').addEventListener('change', e => { filtros.efector = e.target.value; renderizarTodo(); });
+document.getElementById('anioFilter').addEventListener('change', e => { filtros.anio = e.target.value; renderizarTodo(); });
+document.getElementById('tipoPrestacionFilter').addEventListener('change', e => { filtros.tipoPrestacion = e.target.value; renderizarTodo(); });
+document.getElementById('procedimientoFilter').addEventListener('change', e => { filtros.procedimiento = e.target.value; renderizarTodo(); });
+document.getElementById('dxFilter').addEventListener('change', e => { filtros.dx = e.target.value; renderizarTodo(); });
+document.getElementById('osFilter').addEventListener('change', e => { filtros.os = e.target.value; renderizarTodo(); });
+
+document.getElementById('resetFilters').addEventListener('click', () => {
+    filtros = { efector: 'all', anio: 'all', tipoPrestacion: 'all', procedimiento: 'all', dx: 'all', os: 'all' };
+    document.querySelectorAll('.filter-bar select').forEach(s => s.value = 'all'); renderizarTodo();
+});
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', e => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        let seccion = e.target.getAttribute('data-seccion');
+        document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
+        document.getElementById(`seccion-${seccion}`).classList.add('active');
+    });
+});
+
+document.querySelectorAll('#chartNavGeneral .chart-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+        document.querySelectorAll('#chartNavGeneral .chart-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active'); currentChart = e.target.getAttribute('data-chart'); renderizarGraficoActual();
+    });
+});
+
+document.getElementById('chartModePrestaciones').addEventListener('click', e => {
+    document.getElementById('chartModePacientes').classList.remove('active'); e.target.classList.add('active'); chartMode = 'prestaciones'; renderizarGraficoActual();
+});
+document.getElementById('chartModePacientes').addEventListener('click', e => {
+    document.getElementById('chartModePrestaciones').classList.remove('active'); e.target.classList.add('active'); chartMode = 'pacientes'; renderizarGraficoActual();
+});
+
+document.getElementById('diabetesAnioFilter').addEventListener('change', e => { diabetesFiltroAnio = e.target.value; renderizarDiabetes(); });
+document.getElementById('diabetesEstadoFilter').addEventListener('change', e => { diabetesFiltroEstado = e.target.value; renderizarDiabetes(); });
+document.getElementById('diabetesPorcentajeCobertura').addEventListener('input', renderizarDiabetes);
+document.getElementById('diabetesPadronInput').addEventListener('input', renderizarDiabetes);
+document.getElementById('exportDiabetesFilterBtn').addEventListener('click', exportarDiabetesFiltro);
+document.getElementById('resetDiabetesFilter').addEventListener('click', () => {
+    diabetesFiltroAnio = 'all'; diabetesFiltroEstado = 'all'; document.getElementById('diabetesAnioFilter').value = 'all'; document.getElementById('diabetesEstadoFilter').value = 'all'; document.getElementById('diabetesPorcentajeCobertura').value = 50; renderizarDiabetes();
+});
+
+document.getElementById('hipertensionAnioFilter').addEventListener('change', e => { hipertensionFiltroAnio = e.target.value; renderizarHipertension(); });
+document.getElementById('hipertensionEstadoFilter').addEventListener('change', e => { hipertensionFiltroEstado = e.target.value; renderizarHipertension(); });
+document.getElementById('hipertensionPorcentajeCobertura').addEventListener('input', renderizarHipertension);
+document.getElementById('hipertensionPadronInput').addEventListener('input', renderizarHipertension);
+document.getElementById('exportHipertensionFilterBtn').addEventListener('click', exportarHipertensionFiltro);
+document.getElementById('resetHipertensionFilter').addEventListener('click', () => {
+    hipertensionFiltroAnio = 'all'; hipertensionFiltroEstado = 'all'; document.getElementById('hipertensionAnioFilter').value = 'all'; document.getElementById('hipertensionEstadoFilter').value = 'all'; document.getElementById('hipertensionPorcentajeCobertura').value = 50; renderizarHipertension();
+});
+
+document.getElementById('cebAnioFilter').addEventListener('change', e => { cebFiltros.anio = e.target.value; renderizarCEB(); });
+document.getElementById('exportCebN').addEventListener('click', () => { if (window.cebData) exportToXLSX(window.cebData, 'ceb_pendientes_global', 'Pendientes_CEB'); });
+document.getElementById('resetCebFilters').addEventListener('click', () => { cebFiltros.anio = 'all'; document.getElementById('cebAnioFilter').value = 'all'; renderizarCEB(); });
+
+document.getElementById('refreshDataBtn').addEventListener('click', cargarDatos);
+document.getElementById('exportOSConCoberturaBtn').addEventListener('click', exportarOSConCobertura);
+document.getElementById('exportOSSinDatosBtn').addEventListener('click', exportarOSSinDatos);
+
+window.addEventListener('load', cargarDatos);
+</script>
 </body>
 </html>
